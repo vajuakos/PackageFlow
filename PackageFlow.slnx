@@ -1,5 +1,5 @@
 <Solution>
-  <Project Path="PackageFlow.App/PackageFlow.App.csproj" />
   <Project Path="PackageFlow.Core/PackageFlow.Core.csproj" />
   <Project Path="PackageFlow.Data/PackageFlow.Data.csproj" />
+  <Project Path="PackageFlow/PackageFlow.csproj" />
 </Solution>
