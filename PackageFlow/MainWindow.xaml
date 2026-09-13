@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:views="clr-namespace:PackageFlow.Views"
         mc:Ignorable="d"
         Title="PackageFlow" Height="700" Width="1100"
         WindowStartupLocation="CenterScreen">
@@ -16,10 +17,15 @@
 
         <ui:TitleBar Grid.Row="0" Title="PackageFlow" />
 
-        <ui:NavigationView Grid.Row="1" x:Name="RootNavigation">
+        <ui:NavigationView Grid.Row="1" 
+                           x:Name="RootNavigation"
+                           PaneDisplayMode="Left"
+                           FrameMargin="0">
             <ui:NavigationView.MenuItems>
+                <!--<ui:NavigationViewItem Content="Kezdőlap"
+                                       Icon="{ui:SymbolIcon Home24}"
+                                       TargetPageType="{x:Type views:DashboardPage}" />-->
             </ui:NavigationView.MenuItems>
         </ui:NavigationView>
     </Grid>
-
 </ui:FluentWindow>

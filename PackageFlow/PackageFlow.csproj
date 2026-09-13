@@ -11,6 +11,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.31">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.31" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
 		<PackageReference Include="WPF-UI" Version="4.3.0" />
 	</ItemGroup>
@@ -18,11 +24,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\PackageFlow.Core\PackageFlow.Core.csproj" />
 		<ProjectReference Include="..\PackageFlow.Data\PackageFlow.Data.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Folder Include="Views\" />
-		<Folder Include="ViewModels\" />
 	</ItemGroup>
 
 </Project>
