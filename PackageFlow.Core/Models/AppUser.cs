@@ -18,5 +18,10 @@ namespace PackageFlow.Core.Models
         public string DefaultAddress { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public ICollection<Package> SentPackages { get; set; } = new List<Package>();
+        public ICollection<Package> ReceivedPackages { get; set; } = new List<Package>();
+        public ICollection<Package> PickupAssignedPackages { get; set; } = new List<Package>();
+        public ICollection<Package> DeliveryAssignedPackages { get; set; } = new List<Package>();
     }
 }
