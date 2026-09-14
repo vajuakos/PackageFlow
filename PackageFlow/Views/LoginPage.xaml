@@ -44,6 +44,17 @@
                            Height="38"
                            Command="{Binding LoginCommand}"
                            CommandParameter="{Binding ElementName=PasswordInput}" />
+
+                <ui:CardAction Command="{Binding GuestContinueCommand}" Margin="0,10,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="PersonCircle24" FontSize="20" Margin="0,0,12,0"/>
+                        <StackPanel>
+                            <TextBlock Text="Folytatás vendégként" FontWeight="SemiBold"/>
+                            <TextBlock Text="Nem szükséges bejelentkezni"  FontSize="12"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ui:CardAction>
+
             </StackPanel>
         </Border>
     </Grid>

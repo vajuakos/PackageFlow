@@ -1,42 +1,39 @@
-﻿using System;
-using System.Windows;
-using PackageFlow.ViewModels;
+﻿using PackageFlow.Data.Services.Auth;
 using PackageFlow.Views;
+using Wpf.Ui;
 using Wpf.Ui.Controls;
 
 namespace PackageFlow;
 
 public partial class MainWindow : FluentWindow
 {
-    private readonly LoginViewModel _loginViewModel;
+    private readonly INavigationService _navigationService;
+    private readonly IUserSessionService _userSessionService;
 
-    public MainWindow(IServiceProvider serviceProvider, LoginViewModel loginViewModel)
+    public MainWindow(INavigationService navigationService, IUserSessionService userSessionService)
     {
         InitializeComponent();
-        _loginViewModel = loginViewModel;
+        _navigationService = navigationService;
+        _userSessionService = userSessionService;
 
-        RootNavigation.SetServiceProvider(serviceProvider);
+        _navigationService.SetNavigationControl(RootNavigation);
 
-        _loginViewModel.LoginSucceeded += OnLoginSucceeded;
+        RootNavigation.Navigated += (sender, args) =>
+        {
+            if (args.Page is LoginPage || !_userSessionService.IsAuthenticated)
+            {
+                RootNavigation.PaneDisplayMode = NavigationViewPaneDisplayMode.LeftMinimal;
+                RootNavigation.IsPaneOpen = false;
+            }
+            else
+            {
+                RootNavigation.PaneDisplayMode = NavigationViewPaneDisplayMode.Left;
+            }
+        };
 
-        Loaded += OnLoaded;
-    }
-
-    private void OnLoaded(object sender, RoutedEventArgs e)
-    {
-        Loaded -= OnLoaded;
-        ShowLogin();
-    }
-
-    private void ShowLogin()
-    {
-        RootNavigation.PaneDisplayMode = NavigationViewPaneDisplayMode.LeftMinimal;
-        RootNavigation.IsPaneOpen = false;
-        RootNavigation.Navigate(typeof(LoginPage));
-    }
-
-    private void OnLoginSucceeded()
-    {
-        RootNavigation.PaneDisplayMode = NavigationViewPaneDisplayMode.Left;
+        Loaded += (_, _) =>
+        {
+            _navigationService.Navigate(typeof(LoginPage));
+        };
     }
 }
