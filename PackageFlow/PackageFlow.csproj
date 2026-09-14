@@ -16,7 +16,8 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.31" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.31" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
 		<PackageReference Include="WPF-UI" Version="4.3.0" />
 	</ItemGroup>
@@ -24,6 +25,12 @@
 	<ItemGroup>
 		<ProjectReference Include="..\PackageFlow.Core\PackageFlow.Core.csproj" />
 		<ProjectReference Include="..\PackageFlow.Data\PackageFlow.Data.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="appsettings.json">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

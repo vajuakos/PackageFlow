@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PackageFlow.Data.Context;
 using PackageFlow.Data.Seed;
@@ -24,18 +25,18 @@ public partial class App : Application
 
         var services = new ServiceCollection();
 
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .Build();
+
         #region Database connection
-        var localFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var appFolder = Path.Combine(localFolder, "PackageFlow");
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-        Directory.CreateDirectory(appFolder);
-
-        var dbPath = Path.Combine(appFolder, "packageflow.db");
-
-        services.AddDbContext<AppDbContext>(opt => opt.UseSqlite($"Data Source={dbPath}"));
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlServer(connectionString));
         #endregion
 
-        services.AddDbContext<AppDbContext>(opt => opt.UseSqlite("Data Source=packageflow.db"));
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IPackageHandlerService, PackageHandlerService>();
 
