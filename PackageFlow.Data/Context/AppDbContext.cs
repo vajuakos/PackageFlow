@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using PackageFlow.Core.Models;
 
 namespace PackageFlow.Data.Context
@@ -45,12 +46,12 @@ namespace PackageFlow.Data.Context
                 entity.HasOne(p => p.SenderUser)
                       .WithMany(u => u.SentPackages)
                       .HasForeignKey(p => p.SenderUserId)
-                      .OnDelete(DeleteBehavior.SetNull);
+                      .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(p => p.RecipientUser)
                       .WithMany(u => u.ReceivedPackages)
                       .HasForeignKey(p => p.RecipientUserId)
-                      .OnDelete(DeleteBehavior.SetNull);
+                      .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(p => p.PickupCourier)
                       .WithMany(u => u.PickupAssignedPackages)
@@ -98,14 +99,14 @@ namespace PackageFlow.Data.Context
         {
             if (!optionsBuilder.IsConfigured)
             {
-                var appDataFolder = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "PackageFlow");
+                var configuration = new ConfigurationBuilder()
+                    .SetBasePath(AppContext.BaseDirectory)
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                    .Build();
 
-                Directory.CreateDirectory(appDataFolder);
+                var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-                var dbPath = Path.Combine(appDataFolder, "packageflow.db");
-                optionsBuilder.UseSqlite($"Data Source={dbPath}");
+                optionsBuilder.UseSqlServer(connectionString);
             }
         }
     }
