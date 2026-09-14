@@ -1,0 +1,302 @@
+﻿<Page x:Class="PackageFlow.Views.CreatePackagePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:sys="clr-namespace:System;assembly=mscorlib"
+      mc:Ignorable="d" 
+      d:DesignHeight="950" d:DesignWidth="900"
+      Title="Új csomag előjegyzése">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="32">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Margin="0,0,0,24">
+                <ui:HyperlinkButton Icon="{ui:SymbolIcon ArrowLeft24}"
+                                    Content="Vissza a csomagokhoz"
+                                    Command="{Binding NavigateBackCommand}"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,0,0,8"/>
+                <TextBlock Text="Új csomag feladása" 
+                           FontSize="24" 
+                           FontWeight="Bold"/>
+                <TextBlock Text="Add meg a küldemény feladójának, címzettjének és a csomagnak a paramétereit." 
+                           Foreground="#94A3B8" 
+                           Margin="0,4,0,0"/>
+            </StackPanel>
+
+            <Border Grid.Row="1" 
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="20"
+                    Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="Feladó adatai" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Név" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="pl. Kovács János"
+                                        Text="{Binding Request.SenderName, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="E-mail cím" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="pelda@email.com"
+                                        Text="{Binding Request.SenderEmail, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="Telefonszám" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="+36301234567"
+                                        Text="{Binding Request.SenderPhone, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="120"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Ország" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="Magyarország"
+                                        Text="{Binding Request.SenderCountry, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Megye" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="pl. Pest"
+                                        Text="{Binding Request.SenderState, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="Irányítószám" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="1181"
+                                        Text="{Binding Request.SenderPostalCode, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Város" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="Budapest"
+                                        Text="{Binding Request.SenderCity, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Utca" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="Üllői út"
+                                        Text="{Binding Request.SenderStreet, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="Házszám" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="450"
+                                        Text="{Binding Request.SenderStreetNumber, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="6">
+                            <TextBlock Text="Emelet, ajtó" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="1. em. 3."
+                                        Text="{Binding Request.SenderBuildingDetails, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="2"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="20"
+                    Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="Címzett adatai" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Név" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="pl. Nagy Éva"
+                                        Text="{Binding Request.RecipientName, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="E-mail cím" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="eva@email.com"
+                                        Text="{Binding Request.RecipientEmail, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="Telefonszám" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="+36209876543"
+                                        Text="{Binding Request.RecipientPhone, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="120"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Ország" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="Magyarország"
+                                        Text="{Binding Request.DeliveryCountry, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Megye" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="pl. Csongrád-Csanád"
+                                        Text="{Binding Request.DeliveryState, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="Irányítószám" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="6720"
+                                        Text="{Binding Request.DeliveryPostalCode, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Város" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="Szeged"
+                                        Text="{Binding Request.DeliveryCity, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Utca" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="Kárász utca"
+                                        Text="{Binding Request.DeliveryStreet, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="Házszám" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="14"
+                                        Text="{Binding Request.DeliveryStreetNumber, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="6">
+                            <TextBlock Text="Emelet, csengő" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="Kapucsengő: 12"
+                                        Text="{Binding Request.DeliveryBuildingDetails, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="3" 
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="20"
+                    Margin="0,0,0,24">
+                <StackPanel>
+                    <TextBlock Text="Csomag paraméterei és átvétel ideje" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Méretkategória" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ComboBox ItemsSource="{Binding PackageSizes}"
+                                 SelectedValue="{Binding Request.SizeCategory, Mode=TwoWay}"
+                                 SelectedValuePath="Value"
+                                 DisplayMemberPath="DisplayText"
+                                 HorizontalAlignment="Stretch"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Súly (kg)" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <ui:TextBox PlaceholderText="pl. 2.50"
+                                        Text="{Binding Request.WeightKg, 
+                                                       UpdateSourceTrigger=LostFocus, 
+                                                       TargetNullValue='', 
+                                                       FallbackValue='1.0', 
+                                                       StringFormat={}{0:N2}}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="Tervezett felvétel dátuma" Margin="0,0,0,6" Foreground="#94A3B8"/>
+                            <DatePicker SelectedDate="{Binding Request.ScheduledPickupDate, Mode=TwoWay}"
+                                        DisplayDateStart="{x:Static sys:DateTime.Today}"
+                                        HorizontalAlignment="Stretch"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+                <ui:Button Appearance="Secondary" 
+                           Content="Mégse" 
+                           Command="{Binding NavigateBackCommand}"
+                           Width="120"
+                           Margin="0,0,12,0"/>
+
+                <ui:Button Appearance="Primary" 
+                           Icon="{ui:SymbolIcon Checkmark24}"
+                           Content="Előjegyzés létrehozása" 
+                           Command="{Binding SubmitPackageCommand}"
+                           Width="180"/>
+            </StackPanel>
+
+        </Grid>
+    </ScrollViewer>
+</Page>

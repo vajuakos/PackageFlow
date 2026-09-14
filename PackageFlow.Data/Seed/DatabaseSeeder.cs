@@ -67,7 +67,7 @@ public static class DatabaseSeeder
                 Address = new Address
                 {
                     Country = "Magyarország",
-                    PostalCode = "1107",
+                    PostalCode = 1107,
                     State = "Pest",
                     City = "Budapest",
                     Street = "Bihari utca",
@@ -100,7 +100,7 @@ public static class DatabaseSeeder
                 SenderAddress = new Address
                 {
                     Country = "Magyarország",
-                    PostalCode = "1181",
+                    PostalCode = 1181,
                     State = "Pest",
                     City = "Budapest",
                     Street = "Üllői út",
@@ -113,7 +113,7 @@ public static class DatabaseSeeder
                 DeliveryAddress = new Address
                 {
                     Country = "Magyarország",
-                    PostalCode = "6720",
+                    PostalCode = 6720,
                     State = "Csongrád-Csanád",
                     City = "Szeged",
                     Street = "Kárász utca",
@@ -145,7 +145,7 @@ public static class DatabaseSeeder
                 SenderAddress = new Address
                 {
                     Country = "Magyarország",
-                    PostalCode = "1052",
+                    PostalCode = 1052,
                     State = "Pest",
                     City = "Budapest",
                     Street = "Váci utca",
@@ -157,7 +157,7 @@ public static class DatabaseSeeder
                 DeliveryAddress = new Address
                 {
                     Country = "Magyarország",
-                    PostalCode = "4024",
+                    PostalCode = 4024,
                     State = "Hajdú-Bihar",
                     City = "Debrecen",
                     Street = "Piac utca",
@@ -213,7 +213,7 @@ public static class DatabaseSeeder
                 SenderAddress = new Address
                 {
                     Country = "Magyarország",
-                    PostalCode = "1134",
+                    PostalCode = 1134,
                     State = "Pest",
                     City = "Budapest",
                     Street = "Váci út",
@@ -226,7 +226,7 @@ public static class DatabaseSeeder
                 DeliveryAddress = new Address
                 {
                     Country = "Magyarország",
-                    PostalCode = "1182",
+                    PostalCode = 1182,
                     State = "Pest",
                     City = "Budapest",
                     Street = "Petőfi utca",
