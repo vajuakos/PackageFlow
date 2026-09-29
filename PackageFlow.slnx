@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="PackageFlow.Client/PackageFlow.Client.csproj" />
+  <Project Path="PackageFlow/PackageFlow.Server.csproj" />
+</Solution>

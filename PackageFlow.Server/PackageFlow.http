@@ -1,0 +1,6 @@
+@PackageFlow_HostAddress = http://localhost:5240
+
+GET {{PackageFlow_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
