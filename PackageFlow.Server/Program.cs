@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PackageFlow.Server.Data;
+using PackageFlow.Server.Data.Seed;
 using PackageFlow.Server.Models;
 using System.Text;
 
@@ -73,5 +74,16 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Seed database with initial dummy data
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<AppDbContext>();
+    var userManager = services.GetRequiredService<UserManager<AppUser>>();
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole<int>>>();
+
+    await DatabaseSeeder.SeedAsync(context, userManager, roleManager);
+}
 
 app.Run();
