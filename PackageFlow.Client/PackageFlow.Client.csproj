@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PackageFlow.Core\PackageFlow.Shared.csproj" />
+    <ProjectReference Include="..\PackageFlow.Shared\PackageFlow.Shared.csproj" />
   </ItemGroup>
 
 </Project>
