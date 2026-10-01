@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using PackageFlow.Server.Data;
 using PackageFlow.Server.Data.Seed;
 using PackageFlow.Server.Models;
+using PackageFlow.Server.Services.Authentication;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -54,6 +55,8 @@ builder.Services.AddAuthentication(options => {
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"]!))
     };
 });
+
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddAuthorization();
 
