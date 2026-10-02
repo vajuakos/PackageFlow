@@ -6,25 +6,29 @@
 
     <MudSpacer />
 
-    <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
-        <ActivatorContent>
-            <MudChip
-                T="string"
-                Icon="@Icons.Material.Filled.Person"
-                Color="Color.Secondary"
-                OnClick="@(() => context.ToggleAsync())">
-                U
-            </MudChip>
-        </ActivatorContent>
-        <ChildContent>
-            <MudMenuItem
-                Icon="@Icons.Material.Filled.ExitToApp"
-                OnClick="Logout">
-                Kijelentkezés
-            </MudMenuItem>
-        </ChildContent>
-    </MudMenu>
-
+    <AuthorizeView>
+        <Authorized Context="authState">
+            <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                <ActivatorContent>
+                    <MudChip T="string"
+                             Icon="@Icons.Material.Filled.Person"
+                             Color="Color.Secondary"
+                             OnClick="@(() => context.ToggleAsync())"
+                             Style="cursor: pointer;">
+                        @(authState.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value)
+                    </MudChip>
+                </ActivatorContent>
+                <ChildContent>
+                    <MudMenuItem Icon="@Icons.Material.Filled.ExitToApp" OnClick="Logout">
+                        Kijelentkezés
+                    </MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+        </Authorized>
+        <NotAuthorized>
+            <MudButton Color="Color.Inherit" StartIcon="@Icons.Material.Filled.Login" Href="auth/login">Bejelentkezés</MudButton>
+        </NotAuthorized>
+    </AuthorizeView>
 </MudAppBar>
 
 @code {
@@ -39,6 +43,6 @@
     private async Task Logout()
     {
         await AuthService.LogoutAsync();
-        NavigationManager.NavigateTo("/login", forceLoad: false);
+        NavigationManager.NavigateTo("/auth/login", forceLoad: false);
     }
 }
