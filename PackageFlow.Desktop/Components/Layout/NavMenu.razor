@@ -1,27 +1,48 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">PackageFlow.Desktop</a>
+﻿<MudAppBar Elevation="1" Fixed="true" Color="Color.Primary">
+
+    <div @onclick="NavigateToHome" class="d-flex align-items-center" style="cursor: pointer;">
+        <MudImage Src="img/packageflow_logo.png" Alt="PackageFlow Logo" Height="60" ObjectFit="ObjectFit.Contain" />
     </div>
-</div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+    <MudSpacer />
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-    </nav>
-</div>
+    <AuthorizeView>
+        <Authorized Context="authState">
+            <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                <ActivatorContent>
+                    <MudChip T="string"
+                             Icon="@Icons.Material.Filled.Person"
+                             Color="Color.Secondary"
+                             OnClick="@(() => context.ToggleAsync())"
+                             Style="cursor: pointer;">
+                        @(authState.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value)
+                    </MudChip>
+                </ActivatorContent>
+                <ChildContent>
+                    <MudMenuItem Icon="@Icons.Material.Filled.ExitToApp" OnClick="Logout">
+                        Kijelentkezés
+                    </MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+        </Authorized>
+        <NotAuthorized>
+            <MudButton Color="Color.Inherit" StartIcon="@Icons.Material.Filled.Login" Href="auth/login">Bejelentkezés</MudButton>
+        </NotAuthorized>
+    </AuthorizeView>
+</MudAppBar>
+
+@code {
+    [Inject] IAuthService AuthService { get; set; } = default!;
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+
+    private void NavigateToHome()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private async Task Logout()
+    {
+        await AuthService.LogoutAsync();
+        NavigationManager.NavigateTo("/auth/login", forceLoad: false);
+    }
+}

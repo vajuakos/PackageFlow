@@ -1,6 +1,73 @@
-﻿<Router AppAssembly="typeof(MauiProgram).Assembly" NotFoundPage="typeof(Pages.NotFound)">
-    <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
-    </Found>
-</Router>
+﻿<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(MauiProgram).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)">
+                <NotAuthorized>
+                    @if (context.User.Identity?.IsAuthenticated == true)
+                    {
+                        <MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center" Style="height: 80vh;">
+                            <MudPaper Elevation="0"
+                                      Class="pa-12 d-flex flex-column align-center justify-center rounded-xl"
+                                      Style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.15); width: 100%;">
+
+                                <div class="mb-8 d-flex align-center justify-center rounded-circle"
+                                     style="background-color: rgba(255, 152, 0, 0.1); width: 120px; height: 120px; border: 2px solid rgba(255, 152, 0, 0.2);">
+                                    <MudIcon Icon="@Icons.Material.Outlined.Shield"
+                                             Style="font-size: 5rem;"
+                                             Color="Color.Warning" />
+                                </div>
+
+                                <MudText Typo="Typo.h4" Class="text-center mb-3" Style="color: #ffffff; font-weight: 500; letter-spacing: 0.5px;">
+                                    Korlátozott hozzáférés
+                                </MudText>
+
+                                <MudText Typo="Typo.body1" Class="text-center mb-10" Style="color: rgba(255, 255, 255, 0.7); font-weight: 300; max-width: 400px;">
+                                    Sajnos a jelenlegi jogosultságaiddal ez az oldal nem megtekinthető. Kérjük, ellenőrizd, hogy a megfelelő fiókkal léptél-e be.
+                                </MudText>
+                            </MudPaper>
+                        </MudContainer>
+                    }
+                    else
+                    {
+                        <RedirectToLogin />
+                    }
+                </NotAuthorized>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Az oldal nem található</PageTitle>
+            <LayoutView Layout="@typeof(Layout.MainLayout)">
+                <MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center" Style="height: 80vh;">
+                    <MudPaper Elevation="0"
+                              Class="pa-12 d-flex flex-column align-center justify-center rounded-xl"
+                              Style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.15); width: 100%;">
+
+                        <div class="mb-8 d-flex align-center justify-center rounded-circle"
+                             style="background-color: rgba(33, 150, 243, 0.1); width: 120px; height: 120px; border: 2px solid rgba(33, 150, 243, 0.2);">
+                            <MudIcon Icon="@Icons.Material.Outlined.SearchOff"
+                                     Style="font-size: 5rem;"
+                                     Color="Color.Info" />
+                        </div>
+
+                        <MudText Typo="Typo.h4" Class="text-center mb-3" Style="color: #ffffff; font-weight: 500;">
+                            Hoppá! Eltévedtél :)
+                        </MudText>
+
+                        <MudText Typo="Typo.body1" Class="text-center mb-10" Style="color: rgba(255, 255, 255, 0.7); font-weight: 300; max-width: 400px;">
+                            A keresett oldal nem létezik, vagy áthelyeztük. Ellenőrizd az URL címet, vagy térj vissza a főoldalra.
+                        </MudText>
+
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Info"
+                                   Href="/"
+                                   StartIcon="@Icons.Material.Filled.Home"
+                                   Class="rounded-pill px-8">
+                            Vissza a főoldalra
+                        </MudButton>
+                    </MudPaper>
+                </MudContainer>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
