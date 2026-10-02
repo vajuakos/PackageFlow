@@ -1,12 +1,29 @@
 ﻿<MudAppBar Elevation="1" Fixed="true" Color="Color.Primary">
 
-    <div @onclick="NavigateToHome" class="d-flex align-items-center">
-        <MudText Typo="Typo.h5" Class="mr-8">PackageFlow</MudText>
+    <div @onclick="NavigateToHome" class="d-flex align-items-center" style="cursor: pointer;">
+        <MudImage Src="img/packageflow_logo.png" Alt="PackageFlow Logo" Height="60" ObjectFit="ObjectFit.Contain" />
     </div>
 
     <MudSpacer />
 
-    <MudMenuItem Icon="@Icons.Material.Filled.ExitToApp" OnClick="Logout">Kijelentkezés</MudMenuItem>
+    <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+        <ActivatorContent>
+            <MudChip
+                T="string"
+                Icon="@Icons.Material.Filled.Person"
+                Color="Color.Secondary"
+                OnClick="@(() => context.ToggleAsync())">
+                U
+            </MudChip>
+        </ActivatorContent>
+        <ChildContent>
+            <MudMenuItem
+                Icon="@Icons.Material.Filled.ExitToApp"
+                OnClick="Logout">
+                Kijelentkezés
+            </MudMenuItem>
+        </ChildContent>
+    </MudMenu>
 
 </MudAppBar>
 
