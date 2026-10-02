@@ -1,5 +1,8 @@
 <Solution>
   <Project Path="PackageFlow.API/PackageFlow.API.csproj" />
   <Project Path="PackageFlow.Client/PackageFlow.Client.csproj" />
+  <Project Path="PackageFlow.Desktop/PackageFlow.Desktop.csproj" Id="d3657b82-8aec-471f-97bf-b3bae1242910">
+    <Deploy Solution="Debug|*" />
+  </Project>
   <Project Path="PackageFlow.Shared/PackageFlow.Shared.csproj" />
 </Solution>
