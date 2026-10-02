@@ -1,0 +1,86 @@
+﻿@page "/auth/login"
+@attribute [AllowAnonymous]
+
+<PageTitle> Bejelentkezés </PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium">
+
+    <MudPaper Class="pa-4" Elevation="3">
+
+        <div class="px-16">
+
+            <div class="d-flex flex-column align-center mb-6">
+                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large" Class="mb-3 elevation-2">
+                    <MudIcon Icon="@Icons.Material.Filled.LockPerson" Size="Size.Medium" />
+                </MudAvatar>
+                <MudText Typo="Typo.h5" Class="font-weight-bold">Bejelentkezés</MudText>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary mt-1">Kérjük, add meg az adataidat!</MudText>
+            </div>
+
+            <MudForm @ref="loginForm">
+
+                <MudTextField T="string"
+                              @bind-Value="@loginDTO.Email"
+                              Label="Email"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="Email magadása kötelező!" />
+
+                <MudTextField T="string"
+                              @bind-Value="@loginDTO.Password"
+                              Label="Jelszó"
+                              Variant="Variant.Outlined"
+                              RequiredError="Jelszó magadása kötelező!"
+                              InputType="InputType.Password"
+                              Required="true" />
+
+                <div class="d-flex justify-content-end pt-4">
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               @onclick="HandleLogin">
+                        Bejelentkezés
+                    </MudButton>
+
+                </div>
+
+            </MudForm>
+
+        </div>
+
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] AuthenticationStateProvider authenticationStateProvider { get; set; } = default!;
+    [Inject] IAuthService AuthService { get; set; } = default!;
+    [Inject] ISnackbar _snackbar { get; set; } = default!;
+
+    private LoginRequest loginDTO = new();
+    private MudForm loginForm = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        // Prevent logged-in users from accessing the login page
+        if (user.Identity is not null && user.Identity.IsAuthenticated)
+            NavigationManager.NavigateTo("/");
+    }
+
+    async Task HandleLogin()
+    {
+        await loginForm.ValidateAsync();
+
+        if (!loginForm.IsValid) return;
+
+        var response = await AuthService.LoginAsync(loginDTO);
+
+        if (response != null && response.IsSuccess)
+            NavigationManager.NavigateTo("/");
+        else
+            _snackbar.Add("Sikertelen bejelentkezés!", Severity.Error);
+    }
+}
