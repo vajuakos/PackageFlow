@@ -1,5 +1,26 @@
 ﻿@page "/"
 
+<style>
+    .dashboard-card {
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        cursor: pointer;
+        height: 100%;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-8px);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(0, 229, 255, 0.3);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 229, 255, 0.1);
+    }
+</style>
+
 <PageTitle>PackageFlow</PageTitle>
 
 <MudImage Src="img/packageflow_logo.png"
@@ -7,3 +28,55 @@
           Style="width: 50vw"
           ObjectFit="ObjectFit.Contain"
           Class="d-block mx-auto" />
+
+<MudDivider Class="my-4"/>
+
+<MudGrid Spacing="6">
+
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Elevation="4" Class="pa-6 rounded-xl dashboard-card" @onclick="@(() => navigationManager.NavigateTo("/packages/create"))">
+            <MudAvatar Style="width: 70px; height: 70px; background: rgba(33, 150, 243, 0.15); border: 1px solid rgba(33, 150, 243, 0.3);" Class="mb-6">
+                <MudIcon Icon="@Icons.Material.Filled.AddHomeWork" Style="font-size: 2.5rem; color: #4facfe;" />
+            </MudAvatar>
+            <MudText Typo="Typo.h5" Style="font-weight: 700; color: #ffffff;" Class="mb-2">Új csomag feladása</MudText>
+            <MudText Typo="Typo.body2" Style="color: rgba(255,255,255,0.5); line-height: 1.5;" Class="mt-auto">
+                Küldeményt szeretnél feladni? Add meg a feladó, a címzett és a csomag adatait gyorsan és egyszerűen.
+            </MudText>
+        </MudPaper>
+    </MudItem>
+
+    <AuthorizeView Roles="@($"{UserRoles.Customer}")">
+        <Authorized>
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="4" Class="pa-6 rounded-xl dashboard-card" @onclick="@(() => navigationManager.NavigateTo("/packages/dashboard"))">
+                    <MudAvatar Style="width: 70px; height: 70px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3);" Class="mb-6">
+                        <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Style="font-size: 2.5rem; color: #10b981;" />
+                    </MudAvatar>
+                    <MudText Typo="Typo.h5" Style="font-weight: 700; color: #ffffff;" Class="mb-2">Csomagjaim</MudText>
+                    <MudText Typo="Typo.body2" Style="color: rgba(255,255,255,0.5); line-height: 1.5;" Class="mt-auto">
+                        Kövesd nyomon feladott küldeményeid státuszát, vagy indíts új feladást egyetlen helyről.
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+        </Authorized>
+
+        <NotAuthorized>
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="4" Class="pa-6 rounded-xl dashboard-card" @onclick="@(() => navigationManager.NavigateTo("/packages/dashboard"))">
+                    <MudAvatar Style="width: 70px; height: 70px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3);" Class="mb-6">
+                        <MudIcon Icon="@Icons.Material.Filled.ManageSearch" Style="font-size: 2.5rem; color: #10b981;" />
+                    </MudAvatar>
+                    <MudText Typo="Typo.h5" Style="font-weight: 700; color: #ffffff;" Class="mb-2">Csomagkeresés</MudText>
+                    <MudText Typo="Typo.body2" Style="color: rgba(255,255,255,0.5); line-height: 1.5;" Class="mt-auto">
+                        Keress rá bármilyen csomagra az azonosítója alapján, és kövesd nyomon a kézbesítés aktuális állapotát.
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+        </NotAuthorized>
+    </AuthorizeView>
+
+</MudGrid>
+
+@code {
+    [Inject] NavigationManager navigationManager { get; set; } = default!;
+}

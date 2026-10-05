@@ -3,7 +3,7 @@
 using PackageFlow.Shared.Enums;
 using System.ComponentModel.DataAnnotations;
 
-namespace PackageFlow.Server.Models
+namespace PackageFlow.API.Models
 {
     public class Package
     {

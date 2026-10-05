@@ -1,13 +1,13 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
-using PackageFlow.Server.Models;
+using PackageFlow.API.Models;
 using PackageFlow.Shared.Constants;
 using PackageFlow.Shared.DTOs.Authentication;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace PackageFlow.Server.Services.Authentication
+namespace PackageFlow.API.Services.Authentication
 {
     public class AuthService : IAuthService
     {

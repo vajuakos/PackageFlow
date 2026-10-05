@@ -2,8 +2,10 @@
 using Microsoft.Extensions.Logging;
 using MudBlazor;
 using MudBlazor.Services;
+using PackageFlow.Desktop.Handlers;
 using PackageFlow.Desktop.Services;
 using PackageFlow.Desktop.Services.Authentication;
+using PackageFlow.Desktop.Services.PackageHandler;
 
 namespace PackageFlow.Desktop
 {
@@ -38,10 +40,20 @@ namespace PackageFlow.Desktop
             builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
                 sp.GetRequiredService<CustomAuthenticationStateProvider>());
 
+            builder.Services.AddTransient<AuthenticationHeaderHandler>();
+
+            builder.Services.AddHttpClient("PackageFlow.API", client =>
+            {
+                client.BaseAddress = new Uri("https://localhost:7130/");
+            })
+            .AddHttpMessageHandler<AuthenticationHeaderHandler>();
+
             builder.Services.AddScoped(sp =>
-                new HttpClient { BaseAddress = new Uri("https://localhost:7130/") });
+                sp.GetRequiredService<IHttpClientFactory>().CreateClient("PackageFlow.API"));
+
 
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IPackageHandlerService, PackageHandlerService>();
 
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();

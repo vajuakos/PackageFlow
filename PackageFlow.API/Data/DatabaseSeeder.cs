@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using PackageFlow.Server.Models;
+using PackageFlow.API.Models;
 using PackageFlow.Shared.Constants;
 using PackageFlow.Shared.Enums;
 
-namespace PackageFlow.Server.Data.Seed
+namespace PackageFlow.API.Data.Seed
 {
     public static class DatabaseSeeder
     {

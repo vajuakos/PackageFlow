@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using PackageFlow.Server.Models;
+using PackageFlow.API.Models;
 using PackageFlow.Shared.Enums;
 
-namespace PackageFlow.Server.Data
+namespace PackageFlow.API.Data
 {
     public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<int>, int>
     {

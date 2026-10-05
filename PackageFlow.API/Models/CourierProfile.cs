@@ -1,6 +1,6 @@
 ﻿#nullable disable
 
-namespace PackageFlow.Server.Models
+namespace PackageFlow.API.Models
 {
     public class CourierProfile
     {

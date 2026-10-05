@@ -1,0 +1,335 @@
+﻿@page "/packages/create"
+
+<MudCard Class="mb-6 rounded-lg">
+    <MudCardContent>
+        <MudStack Spacing="1">
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       OnClick="NavigateBack"
+                       Class="align-self-start">
+                Vissza a csomagokhoz
+            </MudButton>
+            <MudText Typo="Typo.h5">Új csomag feladása</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Primary">
+                Add meg a küldemény feladójának, címzettjének és a csomag a paramétereit.
+            </MudText>
+        </MudStack>
+    </MudCardContent>
+</MudCard>
+
+<EditForm Model="@request" OnValidSubmit="HandlePackageSubmit">
+    <DataAnnotationsValidator />
+
+    <MudCard Elevation="2" Class="mb-6 rounded-lg">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6" Class="d-flex align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Person" Color="Color.Primary" />
+                    Feladó adatai
+                </MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudGrid Spacing="3">
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="request.SenderName"
+                                  Label="Név"
+                                  Placeholder="pl. Kovács János"
+                                  Variant="Variant.Outlined"
+                                  For="@(() => request.SenderName)"
+                                  Required="true"
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="request.SenderEmail"
+                                  Label="E-mail cím"
+                                  Placeholder="pelda@email.com"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Email"
+                                  For="@(() => request.SenderEmail)"
+                                  Required="true"
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="request.SenderPhone"
+                                  Label="Telefonszám"
+                                  Placeholder="+36301234567"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Telephone"
+                                  For="@(() => request.SenderPhone)"
+                                  Required="true"
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="request.SenderCountry"
+                                  Label="Ország"
+                                  Placeholder="Magyarország"
+                                  Variant="Variant.Outlined"
+                                  For="@(() => request.SenderCountry)"
+                                  Required="true" 
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+                <MudItem xs="12" md="5">
+                    <MudTextField @bind-Value="request.SenderState"
+                                  Label="Megye"
+                                  Placeholder="pl. Pest"
+                                  Variant="Variant.Outlined"
+                                  For="@(() => request.SenderState)" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField @bind-Value="request.SenderPostalCode"
+                                  Label="Irányítószám"
+                                  Placeholder="1181"
+                                  Variant="Variant.Outlined"
+                                  For="@(() => request.SenderPostalCode)"
+                                  Required="true" 
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="request.SenderCity"
+                                  Label="Város"
+                                  Placeholder="Budapest"
+                                  Variant="Variant.Outlined"
+                                  For="@(() => request.SenderCity)"
+                                  Required="true" 
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="request.SenderStreet"
+                                  Label="Utca"
+                                  Placeholder="Üllői út"
+                                  Variant="Variant.Outlined"
+                                  For="@(() => request.SenderStreet)"
+                                  Required="true" 
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField @bind-Value="request.SenderStreetNumber"
+                                  Label="Házszám"
+                                  Placeholder="450"
+                                  Variant="Variant.Outlined"
+                                  For="@(() => request.SenderStreetNumber)"
+                                  Required="true" 
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField @bind-Value="request.SenderBuildingDetails"
+                                  Label="Emelet, ajtó"
+                                  Placeholder="1. em. 3."
+                                  Variant="Variant.Outlined"
+                                  For="@(() => request.SenderBuildingDetails)" 
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+    </MudCard>
+
+    <MudCard Elevation="2" Class="mb-6 rounded-lg">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6" Class="d-flex align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Place" Color="Color.Primary" />
+                    Címzett adatai
+                </MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudGrid Spacing="3">
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="request.RecipientName"
+                                  Label="Név"
+                                  Placeholder="pl. Nagy Éva"
+                                  Variant="Variant.Outlined"
+                                  For="@(() => request.RecipientName)"
+                                  Required="true" 
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="request.RecipientEmail"
+                                  Label="E-mail cím"
+                                  Placeholder="eva@email.com"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Email"
+                                  For="@(() => request.RecipientEmail)"
+                                  Required="true" 
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="request.RecipientPhone"
+                                  Label="Telefonszám"
+                                  Placeholder="+36209876543"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Telephone"
+                                  For="@(() => request.RecipientPhone)"
+                                  Required="true" 
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="request.DeliveryCountry"
+                                  Label="Ország"
+                                  Placeholder="Magyarország"
+                                  Variant="Variant.Outlined"
+                                  For="@(() => request.DeliveryCountry)"
+                                  Required="true" 
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+                <MudItem xs="12" md="5">
+                    <MudTextField @bind-Value="request.DeliveryState"
+                                  Label="Megye"
+                                  Placeholder="pl. Csongrád-Csanád"
+                                  Variant="Variant.Outlined"
+                                  For="@(() => request.DeliveryState)" 
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField @bind-Value="request.DeliveryPostalCode"
+                                  Label="Irányítószám"
+                                  Placeholder="6720"
+                                  Variant="Variant.Outlined"
+                                  For="@(() => request.DeliveryPostalCode)"
+                                  Required="true" 
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="request.DeliveryCity"
+                                  Label="Város"
+                                  Placeholder="Szeged"
+                                  Variant="Variant.Outlined"
+                                  For="@(() => request.DeliveryCity)"
+                                  Required="true" 
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="request.DeliveryStreet"
+                                  Label="Utca"
+                                  Placeholder="Kárász utca"
+                                  Variant="Variant.Outlined"
+                                  For="@(() => request.DeliveryStreet)"
+                                  Required="true" 
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField @bind-Value="request.DeliveryStreetNumber"
+                                  Label="Házszám"
+                                  Placeholder="14"
+                                  Variant="Variant.Outlined"
+                                  For="@(() => request.DeliveryStreetNumber)"
+                                  Required="true" 
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField @bind-Value="request.DeliveryBuildingDetails"
+                                  Label="Emelet, csengő"
+                                  Placeholder="Kapucsengő: 12"
+                                  Variant="Variant.Outlined"
+                                  For="@(() => request.DeliveryBuildingDetails)"
+                                  RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+    </MudCard>
+
+    <MudCard Elevation="2" Class="mb-8 rounded-lg">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6" Class="d-flex align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Inventory2" Color="Color.Primary" />
+                    Csomag paraméterei és csomagfelvétel ideje
+                </MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudGrid Spacing="3">
+                <MudItem xs="12" md="4">
+                    <MudSelect T="PackageSize"
+                               @bind-Value="request.SizeCategory"
+                               Label="Méretkategória"
+                               Variant="Variant.Outlined"
+                               AnchorOrigin="Origin.BottomCenter"
+                               Required="true"
+                               RequiredError="A mező kitöltése kötelező!">
+                        @foreach (var size in Enum.GetValues<PackageSize>())
+                        {
+                            <MudSelectItem Value="@size">
+                                @size.ToDisplayName()
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudNumericField @bind-Value="request.WeightKg"
+                                     Label="Súly (kg)"
+                                     Placeholder="pl. 2.50"
+                                     Variant="Variant.Outlined"
+                                     Min="0.1m"
+                                     Max="50.0m"
+                                     Step="0.1m"
+                                     Format="F2"
+                                     For="@(() => request.WeightKg)"
+                                     Required="true"
+                                     RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudDatePicker @bind-Date="scheduledPickupDate"
+                                   Label="Tervezett csomagfelvétel dátuma"
+                                   Variant="Variant.Outlined"
+                                   MinDate="DateTime.Today"
+                                   DateFormat="yyyy.MM.dd"
+                                   Required="true"
+                                   RequiredError="A mező kitöltése kötelező!" />
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+    </MudCard>
+
+    <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="3" Class="pb-12">
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Default"
+                   OnClick="NavigateBack">
+            Mégse
+        </MudButton>
+        <MudButton ButtonType="ButtonType.Submit"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Check">
+                Előjegyzés létrehozása
+        </MudButton>
+    </MudStack>
+</EditForm>
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] IPackageHandlerService PackageHandler { get; set; } = default!;
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
+
+    private CreatePackageRequest request = new();
+
+    private DateTime? scheduledPickupDate = DateTime.Today.AddDays(1);
+
+    private async Task HandlePackageSubmit()
+    {
+        if (scheduledPickupDate.HasValue)
+            request.ScheduledPickupDate = scheduledPickupDate.Value;
+
+        var isSuccess = await PackageHandler.CreatePackageAsync(request);
+
+        if (isSuccess)
+        {
+            Snackbar.Add("Csomag sikeresen előjegyezve!", Severity.Success);
+            NavigationManager.NavigateTo("/packages/dashboard");
+        }
+        else
+        {
+            Snackbar.Add("Nem sikerült rögzíteni a csomagot. Kérjük, ellenőrizd az adatokat.", Severity.Error);
+        }
+    }
+
+    private void NavigateBack() => NavigationManager.NavigateTo("/packages/dashboard");
+}
