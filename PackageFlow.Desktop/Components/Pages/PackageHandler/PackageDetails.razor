@@ -1,0 +1,242 @@
+﻿@page "/packages/details/{TrackingNumber}"
+
+<MudPaper Elevation="2" Class="pa-4 mb-4 rounded-lg d-flex align-center">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   Class="mr-4"
+                   OnClick="GoBack" />
+    <div>
+        <div class="d-flex align-center gap-2">
+            <MudText Typo="Typo.h5" Style="font-weight: 700;">Csomag módosítása:</MudText>
+            <MudText Typo="Typo.h5" Style="font-weight: 700;" Color="Color.Primary">@TrackingNumber</MudText>
+        </div>
+
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Előjegyzett csomag adatainak frissítése a felvétel előtt.</MudText>
+    </div>
+</MudPaper>
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="mx-auto d-block my-8" />
+}
+else if (package == null)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="rounded-lg">
+        A(z) @TrackingNumber azonosítójú csomag nem található.
+    </MudAlert>
+}
+else
+{
+    @if (isDeadlineExceeded)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-6 rounded-lg">
+            <strong>A módosítási határidő lejárt.</strong><br />
+            A csomag adatai legkésőbb a tervezett felvétel előtti naptári napig módosíthatók. A mezők zárolva lettek.
+        </MudAlert>
+    }
+
+    <MudGrid Spacing="4">
+
+        <MudItem xs="12" md="@(canViewSensitiveData ? 7 : 12)" lg="@(canViewSensitiveData ? 8 : 12)">
+            <MudPaper Elevation="2" Class="pa-6 rounded-lg h-100">
+
+                <MudText Typo="Typo.subtitle1" Style="font-weight: 600;" Class="mb-4">Időzítés és csomagjellemzők</MudText>
+
+                <MudGrid Spacing="3" Class="mb-6">
+                    <MudItem xs="12" sm="6">
+                        <MudDatePicker Label="Tervezett felvételi dátum"
+                                       @bind-Date="selectedPickupDate"
+                                       Disabled="@isDeadlineExceeded"
+                                       MinDate="DateTime.Today"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense" />
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6">
+                        <MudSelect T="PackageSize"
+                                   Label="Méretkategória"
+                                   @bind-Value="package.Size"
+                                   Disabled="@(isDeadlineExceeded)"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense">
+
+                            <MudSelectItem T="PackageSize" Value="PackageSize.ExtraSmall">XS - Extra kicsi</MudSelectItem>
+                            <MudSelectItem T="PackageSize" Value="PackageSize.Small">S - Kicsi</MudSelectItem>
+                            <MudSelectItem T="PackageSize" Value="PackageSize.Medium">M - Közepes</MudSelectItem>
+                            <MudSelectItem T="PackageSize" Value="PackageSize.Large">L - Nagy</MudSelectItem>
+                            <MudSelectItem T="PackageSize" Value="PackageSize.ExtraLarge">XL - Extra nagy</MudSelectItem>
+
+                        </MudSelect>
+                    </MudItem>
+                </MudGrid>
+
+                <div class="d-flex align-center mb-4">
+                    <MudIcon Icon="@Icons.Material.Filled.LocationOn" Color="Color.Success" Class="mr-2" />
+                    <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">Kézbesítési címzett és cím</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="ml-2">(Rögzített, nem módosítható)</MudText>
+                </div>
+
+                <MudGrid Spacing="3" Class="mb-4">
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="Címzett neve" Value="@package.RecipientName" ReadOnly="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="opacity-75" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="Címzett telefonszáma" Value="@package.RecipientPhone" ReadOnly="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="opacity-75" />
+                    </MudItem>
+
+                    <MudItem xs="12" sm="4">
+                        <MudTextField Label="Irányítószám" Value="@package.DeliveryAddress.PostalCode" ReadOnly="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="opacity-75" />
+                    </MudItem>
+                    <MudItem xs="12" sm="8">
+                        <MudTextField Label="Város / Település" Value="@package.DeliveryAddress.City" ReadOnly="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="opacity-75" />
+                    </MudItem>
+
+                    <MudItem xs="12" sm="9">
+                        <MudTextField Label="Utca, tér, út" Value="@package.DeliveryAddress.Street" ReadOnly="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="opacity-75" />
+                    </MudItem>
+                    <MudItem xs="12" sm="3">
+                        <MudTextField Label="Házszám" Value="@package.DeliveryAddress.StreetNumber" ReadOnly="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="opacity-75" />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudTextField Label="Épület, emelet, ajtó" Value="@package.DeliveryAddress.BuildingDetails" ReadOnly="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="opacity-75" />
+                    </MudItem>
+                </MudGrid>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <MudAlert Severity="Severity.Error" Class="mb-4 rounded-lg">@errorMessage</MudAlert>
+                }
+
+                <div class="d-flex justify-end gap-3 mt-6">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Default"
+                               OnClick="GoBack"
+                               Disabled="isSaving">
+                        Mégse / Elvetés
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Save"
+                               OnClick="SaveChanges"
+                               Disabled="@(isDeadlineExceeded || isSaving)">
+                        @(isSaving ? "Mentés folyamatban..." : "Módosítások mentése")
+                    </MudButton>
+                </div>
+
+            </MudPaper>
+        </MudItem>
+
+        @if (canViewSensitiveData)
+        {
+            <MudItem xs="12" md="5" lg="4">
+                <MudPaper Elevation="0" Class="pa-6 rounded-lg border-solid border-2 mud-border-lines-default h-100">
+
+                    <div class="d-flex align-center mb-6">
+                        <MudIcon Icon="@Icons.Material.Filled.History" Color="Color.Info" Class="mr-2" />
+                        <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">Nyomkövetési előzmények</MudText>
+                    </div>
+
+                    @if (packageStatusHistories == null || !packageStatusHistories.Any())
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Nincsenek elérhető előzmények ehhez a csomaghoz.</MudText>
+                    }
+                    else
+                    {
+                        <MudStack Spacing="0" Class="pr-2" Style="max-height: 450px; overflow-y: auto;">
+                            <MudTimeline>
+                                @foreach (var history in packageStatusHistories.OrderByDescending(h => h.Timestamp))
+                                {
+                                    <MudTimelineItem Color="Color.Info">
+                                        <MudText Typo="Typo.button">@history.Status.ToDisplayName()</MudText>
+                                        <MudText Typo="Typo.body2" Class="mud-text-secondary">@history.Timestamp.ToString("yyyy.MM.dd. HH:mm")</MudText>
+                                    </MudTimelineItem>
+                                }
+                            </MudTimeline>
+                        </MudStack>
+                    }
+
+                </MudPaper>
+            </MudItem>
+        }
+
+    </MudGrid>
+}
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
+    [Inject] IPackageHandlerService PackageHandler { get; set; } = default!;
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
+
+    [Parameter]
+    public string TrackingNumber { get; set; } = string.Empty;
+
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private bool isDeadlineExceeded = false;
+    private bool canViewSensitiveData = false;
+    private string errorMessage = string.Empty;
+
+    private PackageResult? package;
+    private List<PackageStatusHistoryResult>? packageStatusHistories;
+    private DateTime? selectedPickupDate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        canViewSensitiveData = user.Identity?.IsAuthenticated == true &&
+            user.IsInRole(UserRoles.Customer);
+
+        var packageTask = PackageHandler.GetPackageByTrackingNumberAsync(TrackingNumber);
+        var historyTask = PackageHandler.GetPackageStatusHistoryAsync(TrackingNumber);
+
+        await Task.WhenAll(packageTask, historyTask);
+
+        package = packageTask.Result;
+        packageStatusHistories = historyTask.Result.ToList();
+
+        isLoading = false;
+
+        if (package != null)
+        {
+            selectedPickupDate = package.ScheduledPickupDate.ToDateTime(TimeOnly.MinValue);
+
+            isDeadlineExceeded = DateOnly.FromDateTime(DateTime.Today) >= package.ScheduledPickupDate;
+        }
+    }
+
+    private async Task SaveChanges()
+    {
+        if (package == null || isDeadlineExceeded) return;
+
+        isSaving = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            var request = new UpdatePackageRequest
+            {
+                Size = package.Size,
+
+                ScheduledPickupDate = selectedPickupDate.HasValue
+                    ? selectedPickupDate.Value
+                    : package.ScheduledPickupDate.ToDateTime(TimeOnly.MinValue)
+            };
+
+            await PackageHandler.UpdatePackageDetailsAsync(TrackingNumber, request);
+
+            Snackbar.Add("A csomag adatai sikeresen frissítve.", Severity.Success);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void GoBack() => NavigationManager.NavigateTo("/packages/dashboard");
+}

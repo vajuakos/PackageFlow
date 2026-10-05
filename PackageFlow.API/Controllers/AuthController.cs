@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using PackageFlow.Server.Services.Authentication;
+using PackageFlow.API.Services.Authentication;
 using PackageFlow.Shared.DTOs.Authentication;
 
-namespace PackageFlow.Server.Controllers
+namespace PackageFlow.API.Controllers
 {
     [Route("api/[controller]")]
     [AllowAnonymous]

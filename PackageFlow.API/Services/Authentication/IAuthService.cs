@@ -1,6 +1,6 @@
 ﻿using PackageFlow.Shared.DTOs.Authentication;
 
-namespace PackageFlow.Server.Services.Authentication
+namespace PackageFlow.API.Services.Authentication
 {
     public interface IAuthService
     {

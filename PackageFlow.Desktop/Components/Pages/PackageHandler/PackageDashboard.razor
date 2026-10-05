@@ -1,0 +1,178 @@
+﻿@page "/packages/dashboard"
+
+<MudGrid Spacing="4" Class="mb-6">
+    <MudItem xs="12" md="3">
+        <MudCard Elevation="2"
+                 Class="pa-4 cursor-pointer d-flex align-center"
+                 Style="min-height: 80px;"
+                 @onclick="NavigateToCreatePackage">
+
+            <div class="d-flex align-center gap-3 w-100">
+                <MudAvatar Color="Color.Info" Variant="Variant.Outlined" Style="width: 44px; height: 44px; min-width: 44px;">
+                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Medium" />
+                </MudAvatar>
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.subtitle1" Style="font-weight: 600; line-height: 1.2;">Új csomag</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Primary">Előjegyzés készítése</MudText>
+                </MudStack>
+            </div>
+
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" md="9">
+        <MudPaper Elevation="1"
+                  Class="pa-3 rounded-lg border-solid border-2 mud-border-lines-default d-flex align-center h-100"
+                  Style="min-height: 80px;">
+            <div class="d-flex align-center gap-3 w-100">
+                <MudTextField @bind-Value="searchTrackingNumber"
+                              Placeholder="Add meg a küldemény azonosítóját (pl. PKG-2026-XXXX)"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              FullWidth="true" />
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           EndIcon="@Icons.Material.Filled.ArrowForward"
+                           OnClick="SearchPackage"
+                           Style="height: 40px; min-width: 120px;"
+                           Class="flex-shrink-0">
+                    Keresés
+                </MudButton>
+            </div>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+<AuthorizeView Roles="@($"{UserRoles.Customer}")">
+    <NotAuthorized>
+        <MudPaper Class="pa-12 mb-6 d-flex flex-column align-center justify-center">
+
+            <div class="rounded-circle d-flex align-center justify-center mb-5"
+                 style="width: 100px; height: 100px; background: rgba(var(--mud-palette-primary-rgb), 0.1);">
+                <MudIcon Icon="@Icons.Material.Filled.LockPerson" Color="Color.Primary" Style="font-size: 4rem;" />
+            </div>
+
+            <MudText Typo="Typo.h5" Style="font-weight: 700;" Class="mb-2">Jelentkezz be a csomagjaid megtekintéséhez!</MudText>
+            <MudText Typo="Typo.body1" Color="Color.Primary" Class="mb-6" Style="max-width: 450px; text-align: center;">
+                A csomagjaid nyomon követéséhez jelentkezz be a fiókodba.
+            </MudText>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Large"
+                       StartIcon="@Icons.Material.Filled.Login"
+                       OnClick="NavigateToLogin"
+                       Class="px-6 py-2 rounded-lg"
+                       Style="font-weight: 600;">
+                Bejelentkezés
+            </MudButton>
+
+        </MudPaper>
+    </NotAuthorized>
+    <Authorized>
+        <MudText Typo="Typo.h5" Class="mb-4" Style="font-weight: 700;">Csomagok áttekintése</MudText>
+
+        @if (packages == null)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="mx-auto d-block my-8" />
+        }
+        else if (!packages.Any())
+        {
+            <MudPaper Elevation="0" Class="pa-10 mb-6 rounded-lg border-solid border-2 mud-border-lines-default text-center">
+                <MudIcon Icon="@Icons.Material.Filled.Inventory2" Style="font-size: 3rem;" Color="Color.Default" Class="mb-2 opacity-50" />
+                <MudText Typo="Typo.body1" Color="Color.Secondary">Nincsenek megjeleníthető csomagok!</MudText>
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Large"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="NavigateToCreatePackage"
+                           Class="px-6 py-2 rounded-lg"
+                           Style="font-weight: 600;">
+                    Új csomag feladása
+                </MudButton>
+            </MudPaper>
+        }
+        else
+        {
+            <MudStack Spacing="3">
+                @foreach (var package in packages)
+                {
+                    <MudPaper Elevation="1" Class="pa-4 hover-lift cursor-pointer rounded-lg" @onclick="() => OpenPackageDetails(package.TrackingNumber)">
+                        <MudGrid Class="align-center">
+                            <MudItem xs="12" md="8">
+                                <div class="d-flex align-center mb-2">
+                                    <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Color="Color.Info" Class="mr-3" />
+                                    <MudText Typo="Typo.h6" Style="font-weight: 700;" Class="mr-4">@package.TrackingNumber</MudText>
+
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">
+                                        @package.Status.ToDisplayName()
+                                    </MudChip>
+                                </div>
+
+                                <MudText Typo="Typo.body2" Class="mb-1">
+                                    <span class="font-weight-bold mud-text-secondary">Címzett: </span>
+                                    <span class="font-weight-medium">@package.RecipientName</span>
+                                    <span class="mud-text-disabled mx-1">|</span>
+                                    <span class="mud-text-secondary">@package.DeliveryAddress.PostalCode @package.DeliveryAddress.State, @package.DeliveryAddress.Street @package.DeliveryAddress.StreetNumber</span>
+                                </MudText>
+
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    <span class="font-weight-bold">Feladó: </span> @package.SenderName
+                                </MudText>
+                            </MudItem>
+
+                            <MudItem xs="12" md="4" Class="d-flex flex-column justify-center align-end">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Tervezett felvétel</MudText>
+                                <MudText Typo="Typo.body1" Style="font-weight: 600;" Class="mb-1">
+                                    @package.ScheduledPickupDate.ToString("yyyy.MM.dd.")
+                                </MudText>
+
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    Méret: @package.Size.ToDisplayName() <span class="mx-1">•</span> @package.WeightKg.ToString("N2") kg
+                                </MudText>
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+                }
+            </MudStack>
+        }
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] IPackageHandlerService PackageHandler { get; set; } = default!;
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
+
+    private string searchTrackingNumber = string.Empty;
+
+    private List<PackageResult> packages = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        packages = await PackageHandler.GetPackagesForUserAsync();
+    }
+
+    private void SearchPackage()
+    {
+        if (string.IsNullOrWhiteSpace(searchTrackingNumber))
+        {
+            Snackbar.Add("Adj meg egy csomagazonosítót!", Severity.Warning);
+            return;
+        }
+
+        OpenPackageDetails(searchTrackingNumber);
+    }
+
+    private void OpenPackageDetails(string trackingNumber)
+    {
+        NavigationManager.NavigateTo($"/packages/details/{trackingNumber}");
+    }
+
+    private void NavigateToCreatePackage() => NavigationManager.NavigateTo("/packages/create");
+    private void NavigateToLogin() => NavigationManager.NavigateTo("/auth/login");
+}

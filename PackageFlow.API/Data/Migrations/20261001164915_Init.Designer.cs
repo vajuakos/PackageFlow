@@ -10,7 +10,7 @@ using PackageFlow.Server.Data;
 
 #nullable disable
 
-namespace PackageFlow.Server.Data.Migrations
+namespace PackageFlow.API.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20261001164915_Init")]

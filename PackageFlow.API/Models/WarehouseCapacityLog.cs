@@ -1,4 +1,4 @@
-﻿namespace PackageFlow.Server.Models
+﻿namespace PackageFlow.API.Models
 {
     public class WarehouseCapacityLog
     {
