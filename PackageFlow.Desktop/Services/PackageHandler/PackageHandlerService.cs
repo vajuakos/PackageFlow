@@ -17,7 +17,7 @@ namespace PackageFlow.Desktop.Services.PackageHandler
 
         public async Task<bool> CreatePackageAsync(CreatePackageRequest request)
         {
-            var response = await _httpClient.PostAsJsonAsync(BaseUrl, request);
+            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/create", request);
 
             return await response.Content.ReadFromJsonAsync<bool>();
         }

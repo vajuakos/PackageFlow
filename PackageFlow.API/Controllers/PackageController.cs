@@ -19,15 +19,15 @@ namespace PackageFlow.API.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreatePackage([FromBody] CreatePackageRequest request)
+        public async Task<ActionResult<bool>> CreatePackage([FromBody] CreatePackageRequest request)
         {
             if (request == null) return BadRequest("Invalid request payload");
 
             var success = await _packageHandlerService.CreatePackageAsync(request, CurrentUserId);
 
-            if (success) return Ok("Package created successfully");
+            if (success) return Ok(true);
 
-            return BadRequest("Failed to create the package");
+            return BadRequest(false);
         }
 
         [AllowAnonymous]
