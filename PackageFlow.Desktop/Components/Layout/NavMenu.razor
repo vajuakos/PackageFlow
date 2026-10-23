@@ -26,7 +26,20 @@
             </MudMenu>
         </Authorized>
         <NotAuthorized>
-            <MudButton Color="Color.Inherit" StartIcon="@Icons.Material.Filled.Login" Href="auth/login">Bejelentkezés</MudButton>
+            <div class="d-flex gap-3">
+                <MudButton Color="Color.Inherit"
+                           StartIcon="@Icons.Material.Filled.PersonAdd"
+                           Href="/auth/register">
+                    Regisztráció
+                </MudButton>
+
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Inherit"
+                           StartIcon="@Icons.Material.Filled.Login"
+                           Href="auth/login">
+                    Bejelentkezés
+                </MudButton>
+            </div>
         </NotAuthorized>
     </AuthorizeView>
 </MudAppBar>

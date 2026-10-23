@@ -1,0 +1,158 @@
+﻿@page "/auth/register"
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center pa-4">
+    <MudCard Elevation="4" Class="pa-6 rounded-lg w-100">
+        <EditForm Model="@_model" OnValidSubmit="HandleRegistrationAsync">
+            <DataAnnotationsValidator />
+
+            <MudCardHeader Class="px-0 pt-0 pb-4">
+                <CardHeaderContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Size="Size.Large" Color="Color.Primary" />
+                        <MudText Typo="Typo.h5" Style="font-weight: 600;">Fiók létrehozása</MudText>
+                    </MudStack>
+                    <MudText Typo="Typo.body2" Color="Color.Primary" Align="Align.Center">
+                        Regisztrálj a rendszer használatához!
+                    </MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+
+            <MudCardContent Class="px-0 py-0">
+                <MudStack Spacing="3">
+                    <MudTextField @bind-Value="_model.Username"
+                                  For="@(() => _model.Username)"
+                                  Label="Felhasználónév"
+                                  Placeholder="pl. kovacs.janos"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Person" />
+
+                    <MudTextField @bind-Value="_model.FullName"
+                                  For="@(() => _model.FullName)"
+                                  Label="Teljes név"
+                                  Placeholder="pl. Kovács János"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Badge" />
+
+                    <MudTextField @bind-Value="_model.Email"
+                                  For="@(() => _model.Email)"
+                                  Label="E-mail cím"
+                                  Placeholder="pl. kovacs.janos@example.com"
+                                  InputType="InputType.Email"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Email" />
+
+                    <MudTextField @bind-Value="_model.PhoneNumber"
+                                  For="@(() => _model.PhoneNumber)"
+                                  Label="Telefonszám"
+                                  Placeholder="+36 30 123 4567"
+                                  InputType="InputType.Telephone"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Phone" />
+
+                    <MudTextField @bind-Value="_model.Password" Label="Jelszó" Placeholder="Legalább 6 karakter"
+                                  For="@(() => _model.Password)"
+                                  InputType="@_passwordInput"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.End"
+                                  AdornmentIcon="@_passwordInputIcon"
+                                  OnAdornmentClick="TogglePasswordVisibility" />
+
+                    <MudTextField @bind-Value="_model.ConfirmPassword" Label="Jelszó újra" Placeholder="Írd be újra a jelszót"
+                                  For="@(() => _model.ConfirmPassword)"
+                                  InputType="@_passwordInput"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.End"
+                                  AdornmentIcon="@_passwordInputIcon"
+                                  OnAdornmentClick="TogglePasswordVisibility" />
+                </MudStack>
+            </MudCardContent>
+
+            <MudCardActions Class="d-flex flex-column gap-3 px-0 pb-0 pt-6">
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true" StartIcon="@Icons.Material.Filled.PersonAdd">
+                    Regisztráció véglegesítése
+                </MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Default" FullWidth="true" OnClick="NavigateToLogin">
+                    Már van fiókom, bejelentkezek
+                </MudButton>
+            </MudCardActions>
+        </EditForm>
+    </MudCard>
+</MudContainer>
+
+@code {
+    [Inject] NavigationManager _navigationManager { get; set; } = default!;
+    [Inject] IAuthService _authService { get; set; } = default!;
+    [Inject] ISnackbar _snackbar { get; set; } = default!;
+
+    private bool _isShowPassword = false;
+    private InputType _passwordInput = InputType.Password;
+    private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    private RegisterViewModel _model = new();
+
+    private async Task HandleRegistrationAsync()
+    {
+        if (_model.Password != _model.ConfirmPassword)
+        {
+            _snackbar.Add("A megadott jelszavak nem egyeznek!", Severity.Warning);
+            return;
+        }
+
+        var request = new RegistrationRequest
+        {
+            Username = _model.Username,
+            FullName = _model.FullName,
+            Email = _model.Email,
+            PhoneNumber = _model.PhoneNumber,
+            Password = _model.Password
+        };
+
+        var isSucceed = await _authService.RegistrateAsync(request);
+
+        if (isSucceed)
+        {
+            _snackbar.Add("Sikeres regisztráció!", Severity.Success);
+            _navigationManager.NavigateTo("/");
+        }
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        _isShowPassword = !_isShowPassword;
+        _passwordInputIcon = _isShowPassword ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff;
+        _passwordInput = _isShowPassword ? InputType.Text : InputType.Password;
+    }
+
+    private void NavigateToLogin() => _navigationManager.NavigateTo("/auth/login");
+
+    // Local ViewModel to avoid sending unnecessary data to the API
+    public class RegisterViewModel
+    {
+        [Required(ErrorMessage = "A felhasználónév megadása kötelező!")]
+        [StringLength(50, MinimumLength = 3, ErrorMessage = "A felhasználónév 3 és 50 karakter között kell, hogy legyen!")]
+        public string Username { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "A teljes név megadása kötelező!")]
+        public string FullName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Az e-mail cím megadása kötelező!")]
+        [EmailAddress(ErrorMessage = "Érvénytelen e-mail formátum!")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "A telefonszám megadása kötelező!")]
+        [Phone(ErrorMessage = "Érvénytelen telefonszám formátum!")]
+        public string? PhoneNumber { get; set; }
+
+        [Required(ErrorMessage = "A jelszó megadása kötelező!")]
+        [MinLength(6, ErrorMessage = "A jelszónak legalább 6 karakternek kell lennie!")]
+        public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "A jelszó megerősítése kötelező!")]
+        [Compare(nameof(Password), ErrorMessage = "A megadott jelszavak nem egyeznek!")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+}
