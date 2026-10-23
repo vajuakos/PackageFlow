@@ -48,7 +48,7 @@ namespace PackageFlow.Desktop
 
             builder.Services.AddHttpClient("PackageFlow.API", client =>
             {
-                client.BaseAddress = new Uri("https://localhost:7130/");
+                client.BaseAddress = new Uri("http://localhost:8080/");
             })
             .AddHttpMessageHandler<AuthenticationHeaderHandler>();
 
