@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PackageFlow.API.Models;
 using PackageFlow.API.Services.PackageHandler;
+using PackageFlow.API.Services.PackageLabelGenerator;
 using PackageFlow.Shared.DTOs.PackageHandler;
 
 namespace PackageFlow.API.Controllers
@@ -12,10 +13,13 @@ namespace PackageFlow.API.Controllers
     public class PackageController : ApiControllerBase
     {
         private readonly IPackageHandlerService _packageHandlerService;
+        private readonly IPackageLabelGeneratorService _labelGeneratorService;
 
-        public PackageController(IPackageHandlerService packageHandlerService)
+        public PackageController(IPackageHandlerService packageHandlerService,
+            IPackageLabelGeneratorService packageLabelGeneratorService)
         {
             _packageHandlerService = packageHandlerService ?? throw new ArgumentNullException(nameof(packageHandlerService));
+            _labelGeneratorService = packageLabelGeneratorService ?? throw new ArgumentNullException(nameof(packageLabelGeneratorService));
         }
 
         [HttpPost("create")]
@@ -82,6 +86,17 @@ namespace PackageFlow.API.Controllers
             {
                 return NotFound("Package not found");
             }
+        }
+
+        [HttpGet("{trackingNumber}/label")]
+        public async Task<IActionResult> GetLabel(string trackingNumber)
+        {
+            var pdfBytes = await _labelGeneratorService.GenerateLabelAsync(trackingNumber);
+
+            if (pdfBytes == null || pdfBytes.Length == 0)
+                return NotFound($"Package with tracking number '{trackingNumber}' was not found.");
+
+            return File(pdfBytes, "application/pdf", $"Label_{trackingNumber}.pdf");
         }
     }
 }
