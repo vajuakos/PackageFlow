@@ -108,20 +108,30 @@ else
                     <MudAlert Severity="Severity.Error" Class="mb-4 rounded-lg">@errorMessage</MudAlert>
                 }
 
-                <div class="d-flex justify-end gap-3 mt-6">
+                <div class="d-flex justify-content-between gap-3 mt-6">
                     <MudButton Variant="Variant.Outlined"
-                               Color="Color.Default"
-                               OnClick="GoBack"
-                               Disabled="isSaving">
-                        Mégse / Elvetés
-                    </MudButton>
-                    <MudButton Variant="Variant.Filled"
+                               StartIcon="@Icons.Material.Filled.FileDownload"
                                Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.Save"
-                               OnClick="SaveChanges"
-                               Disabled="@(isDeadlineExceeded || isSaving)">
-                        @(isSaving ? "Mentés folyamatban..." : "Módosítások mentése")
+                               OnClick="DownloadPackageLabel"
+                               Disabled="isSaving">
+                        Csomagcímke letöltés
                     </MudButton>
+
+                    <div>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   OnClick="GoBack"
+                                   Disabled="isSaving">
+                            Mégse / Elvetés
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Save"
+                                   OnClick="SaveChanges"
+                                   Disabled="@(isDeadlineExceeded || isSaving)">
+                            @(isSaving ? "Mentés folyamatban..." : "Módosítások mentése")
+                        </MudButton>
+                    </div>
                 </div>
 
             </MudPaper>
@@ -167,6 +177,8 @@ else
     [Inject] NavigationManager NavigationManager { get; set; } = default!;
     [Inject] AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
     [Inject] IPackageHandlerService PackageHandler { get; set; } = default!;
+    [Inject] IPackageLableGeneratorService PackageLabelGenerator { get; set; } = default!;
+    [Inject] IJSRuntime JSinterop { get; set; } = default!;
     [Inject] ISnackbar Snackbar { get; set; } = default!;
 
     [Parameter]
@@ -235,6 +247,35 @@ else
         finally
         {
             isSaving = false;
+        }
+    }
+
+    private async Task DownloadPackageLabel()
+    {
+        if (package == null)
+        {
+            Snackbar.Add("A címke mentése sikertelen!", Severity.Error);
+            return;
+        }
+
+        try
+        {
+            var pdfBytes = await PackageLabelGenerator.GetLabelAsync(package.TrackingNumber);
+
+            var defaultFileName = $"Label_PCKG_FLW_{package.TrackingNumber}.pdf";
+
+            using var stream = new MemoryStream(pdfBytes);
+
+            var fileSaveResult = await FileSaver.Default.SaveAsync(defaultFileName, stream, CancellationToken.None);
+
+            if (fileSaveResult.IsSuccessful)
+            {
+                Snackbar.Add("A címke sikeresen elmentve!", Severity.Success);
+            }
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("A címke mentése sikertelen!", Severity.Error);
         }
     }
 

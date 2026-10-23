@@ -6,6 +6,8 @@ using PackageFlow.Desktop.Handlers;
 using PackageFlow.Desktop.Services;
 using PackageFlow.Desktop.Services.Authentication;
 using PackageFlow.Desktop.Services.PackageHandler;
+using PackageFlow.Desktop.Services.PackageLabelGenerator;
+using CommunityToolkit.Maui;
 
 namespace PackageFlow.Desktop
 {
@@ -16,9 +18,11 @@ namespace PackageFlow.Desktop
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .UseMauiCommunityToolkit()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+                    fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
             builder.Services.AddMauiBlazorWebView();
@@ -51,9 +55,10 @@ namespace PackageFlow.Desktop
             builder.Services.AddScoped(sp =>
                 sp.GetRequiredService<IHttpClientFactory>().CreateClient("PackageFlow.API"));
 
-
+            // Custom services
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IPackageHandlerService, PackageHandlerService>();
+            builder.Services.AddScoped<IPackageLableGeneratorService, PackageLableGeneratorService>();
 
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
