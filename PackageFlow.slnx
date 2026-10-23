@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="PackageFlow.API.Tests/PackageFlow.API.Tests.csproj" Id="4fb75c08-602c-4a35-8797-8c34fcbddea7" />
   <Project Path="PackageFlow.API/PackageFlow.API.csproj" />
   <Project Path="PackageFlow.Desktop/PackageFlow.Desktop.csproj" Id="d3657b82-8aec-471f-97bf-b3bae1242910">
     <Deploy Solution="Debug|*" />

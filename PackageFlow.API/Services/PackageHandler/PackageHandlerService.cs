@@ -100,6 +100,8 @@ namespace PackageFlow.API.Services.PackageHandler
                     WeightKg = p.WeightKg,
                     ScheduledPickupDate = p.ScheduledPickupDate,
 
+                    TrackingNumber = p.TrackingNumber,
+
                     SenderUser = p.SenderUser != null ? new UserResult
                     {
                         FullName = p.SenderUser.FullName,
