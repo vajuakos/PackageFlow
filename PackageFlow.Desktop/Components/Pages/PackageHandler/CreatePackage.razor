@@ -1,4 +1,5 @@
 ﻿@page "/packages/create"
+@attribute [AllowAnonymous]
 
 <MudCard Class="mb-6 rounded-lg">
     <MudCardContent>
@@ -250,6 +251,7 @@
                                @bind-Value="request.SizeCategory"
                                Label="Méretkategória"
                                Variant="Variant.Outlined"
+                               For="@(() => request.SizeCategory)"
                                AnchorOrigin="Origin.BottomCenter"
                                Required="true"
                                RequiredError="A mező kitöltése kötelező!">
