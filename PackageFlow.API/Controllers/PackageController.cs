@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using PackageFlow.API.Models;
 using PackageFlow.API.Services.PackageHandler;
 using PackageFlow.API.Services.PackageLabelGenerator;
+using PackageFlow.Shared.Constants;
 using PackageFlow.Shared.DTOs.PackageHandler;
 
 namespace PackageFlow.API.Controllers
@@ -23,6 +24,7 @@ namespace PackageFlow.API.Controllers
         }
 
         [HttpPost("create")]
+        [AllowAnonymous]
         public async Task<ActionResult<bool>> CreatePackage([FromBody] CreatePackageRequest request)
         {
             if (request == null) return BadRequest("Invalid request payload");
@@ -34,8 +36,8 @@ namespace PackageFlow.API.Controllers
             return BadRequest(false);
         }
 
-        [AllowAnonymous]
         [HttpGet("track/{trackingNumber}")]
+        [AllowAnonymous]
         public async Task<ActionResult<PackageResult>> GetPackageByTrackingNumber(string trackingNumber)
         {
             if (string.IsNullOrWhiteSpace(trackingNumber)) return BadRequest("Tracking number must be provided!");
@@ -48,6 +50,7 @@ namespace PackageFlow.API.Controllers
         }
 
         [HttpGet("my-packages")]
+        [Authorize($"{UserRoles.Customer}")]
         public async Task<ActionResult<List<PackageResult>>> GetPackagesForUser()
         {
             if (CurrentUserId == null) return Unauthorized("Unauthorized access!");
@@ -58,6 +61,7 @@ namespace PackageFlow.API.Controllers
         }
 
         [HttpGet("{trackingNumber}/history")]
+        [AllowAnonymous]
         public async Task<ActionResult<IReadOnlyList<PackageStatusHistory>>> GetPackageStatusHistory(string trackingNumber)
         {
             if (string.IsNullOrWhiteSpace(trackingNumber))
@@ -72,6 +76,7 @@ namespace PackageFlow.API.Controllers
         }
 
         [HttpPut("{trackingNumber}")]
+        [Authorize($"{UserRoles.Customer}")]
         public async Task<IActionResult> UpdatePackage(string trackingNumber, [FromBody] UpdatePackageRequest request)
         {
             if (string.IsNullOrWhiteSpace(trackingNumber))
@@ -89,6 +94,7 @@ namespace PackageFlow.API.Controllers
         }
 
         [HttpGet("{trackingNumber}/label")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetLabel(string trackingNumber)
         {
             var pdfBytes = await _labelGeneratorService.GenerateLabelAsync(trackingNumber);
