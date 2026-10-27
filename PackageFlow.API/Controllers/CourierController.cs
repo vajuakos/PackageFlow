@@ -33,5 +33,22 @@ namespace PackageFlow.API.Controllers
 
             return Ok(packages);
         }
+
+
+        [HttpPost("packages/{trackingNumber}/pickup")]
+        public async Task<ActionResult> RecordPickup(string trackingNumber)
+        {
+            if (CurrentUserId == null)
+                return Unauthorized("Unathorized access!");
+
+            var success = await _courierService
+                .RecordPickupAsync(trackingNumber, CurrentUserId.Value);
+
+            if (!success)
+                return BadRequest("The package could not be pickud up. Check the tracking number," +
+                    "assignment, and package status.");
+
+            return Ok("Package pickup recorded successfully.");
+        }
     }
 }
