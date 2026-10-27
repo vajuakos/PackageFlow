@@ -7,5 +7,7 @@ namespace PackageFlow.API.Services.Courier
         Task<List<PackageResult>> GetAssignedPackagesAsync(int courierId);
 
         Task<bool> RecordPickupAsync(string trackingNumber, int courierId);
+
+        Task<bool> RecordOutForDeliveryAsync(string trackingNumber, int courierId);
     }
 }

@@ -50,5 +50,21 @@ namespace PackageFlow.API.Controllers
 
             return Ok("Package pickup recorded successfully.");
         }
+
+
+        [HttpPost("packages/{trackingNumber}/out-for-delivery")]
+        public async Task<ActionResult> RecordOutForDelivery(string trackingNumber)
+        {
+            if (CurrentUserId == null)
+                return Unauthorized("Unauthorized access!");
+
+            var success = await _courierService
+                .RecordPickupAsync(trackingNumber, CurrentUserId.Value);
+
+            if (!success)
+                return BadRequest("The package could not be marked as out for delivery.");
+
+            return Ok("Package marked as out for delivery successfully.");
+        }
     }
 }

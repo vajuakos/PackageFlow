@@ -145,5 +145,49 @@ namespace PackageFlow.API.Services.Courier
 
             return true;
         }
+
+
+        public async Task<bool> RecordOutForDeliveryAsync(string trackingNumber, int courierId)
+        {
+            if (string.IsNullOrWhiteSpace(trackingNumber))
+                throw new ArgumentException("Tracking number cannot be empty.",
+                    nameof(trackingNumber));
+
+            if (courierId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(courierId));
+
+            var package = await _dbContext.Packages
+                .FirstOrDefaultAsync(p =>
+                    p.TrackingNumber == trackingNumber &&
+                    p.DeliveryCourierId == courierId);
+
+            // If package does not exist, or is not assigned to this courier.
+            if (package == null)
+                return false;
+
+            // Only 'DeliveryAssigned' status is allowed.
+            if (package.Status != Shared.Enums.PackageStatus.DeliveryAssigned)
+                return false;
+
+            var now = DateTime.UtcNow;
+
+            package.Status = Shared.Enums.PackageStatus.OutForDelivery;
+            package.PickedUpAt = now;
+
+            var history = new PackageStatusHistory
+            {
+                PackageId = package.Id,
+                Status = Shared.Enums.PackageStatus.OutForDelivery,
+                Timestamp = now,
+                ChangedByUserId = courierId,
+                Note = "The courier successfully recorded the package as out for delivery."
+            };
+
+            _dbContext.PackageStatusHistories.Add(history);
+
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
     }
 }
