@@ -145,50 +145,5 @@ namespace PackageFlow.API.Services.Courier
 
             return true;
         }
-
-
-
-        public async Task<bool> RecordWarehouseArrivalAsync(string trackingNumber, int courierId)
-        {
-            if (string.IsNullOrWhiteSpace(trackingNumber))
-                throw new ArgumentException("Tracking number cannot be empty.",
-                    nameof(trackingNumber));
-
-            if (courierId <= 0)
-                throw new ArgumentOutOfRangeException(nameof(courierId));
-
-            var package = await _dbContext.Packages
-                .FirstOrDefaultAsync(p =>
-                    p.TrackingNumber == trackingNumber &&
-                    p.PickupCourierId == courierId);
-
-            // If package does not exist, or is not assigned to this courier.
-            if (package == null)
-                return false;
-
-            // Only picked up packages can arrive at the warehouse.
-            if (package.Status != Shared.Enums.PackageStatus.PickedUp)
-                return false;
-
-            var now = DateTime.UtcNow;
-
-            package.Status = Shared.Enums.PackageStatus.InWarehouse;
-            package.ReceivedInWarehouseAt = now;
-
-            var history = new PackageStatusHistory
-            {
-                PackageId = package.Id,
-                Status = Shared.Enums.PackageStatus.InWarehouse,
-                Timestamp = now,
-                ChangedByUserId = courierId,
-                Note = "The courier recorded the package arrival at the warehouse."
-            };
-
-            _dbContext.PackageStatusHistories.Add(history);
-
-            await _dbContext.SaveChangesAsync();
-
-            return true;
-        }
     }
 }
