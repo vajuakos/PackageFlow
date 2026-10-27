@@ -1,9 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PackageFlow.API.Data;
 using PackageFlow.API.Models;
-using PackageFlow.Shared.DTOs.Common;
 using PackageFlow.Shared.DTOs.PackageHandler;
-using System.Net.Security;
 
 
 namespace PackageFlow.API.Services.Courier
@@ -15,7 +13,7 @@ namespace PackageFlow.API.Services.Courier
         public CourierService(AppDbContext dbContext)
         {
             _dbContext = dbContext
-                ?? throw new ArgumentException(nameof(dbContext));
+                ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
         public async Task<List<PackageResult>> GetAssignedPackagesAsync(int courierId)
@@ -102,6 +100,50 @@ namespace PackageFlow.API.Services.Courier
                     DeliveredAt = p.DeliveredAt
                 })
                 .ToListAsync();
+        }
+
+
+        public async Task<bool> RecordPickupAsync(string trackingNumber, int courierId)
+        {
+            if (string.IsNullOrWhiteSpace(trackingNumber))
+                throw new ArgumentException("Tracking number cannot be empty.",
+                    nameof(trackingNumber));
+
+            if (courierId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(courierId));
+
+            var package = await _dbContext.Packages
+                .FirstOrDefaultAsync(p =>
+                    p.TrackingNumber == trackingNumber &&
+                    p.PickupCourierId == courierId);
+
+            // If package does not exist, or is not assigned to this courier.
+            if (package == null)
+                return false;
+
+            // Only 'PickupAssigned' status is allowed.
+            if (package.Status != Shared.Enums.PackageStatus.PickupAssigned)
+                return false;
+
+            var now = DateTime.UtcNow;
+
+            package.Status = Shared.Enums.PackageStatus.PickedUp;
+            package.PickedUpAt = now;
+
+            var history = new PackageStatusHistory
+            {
+                PackageId = package.Id,
+                Status = Shared.Enums.PackageStatus.PickedUp,
+                Timestamp = now,
+                ChangedByUserId = courierId,
+                Note = "The courier successfully recorded the package pickup."
+            };
+
+            _dbContext.PackageStatusHistories.Add(history);
+
+            await _dbContext.SaveChangesAsync();
+
+            return true;
         }
     }
 }
