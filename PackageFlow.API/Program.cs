@@ -8,6 +8,7 @@ using PackageFlow.API.Models;
 using PackageFlow.API.Services.Authentication;
 using PackageFlow.API.Services.PackageHandler;
 using PackageFlow.API.Services.Courier;
+using PackageFlow.API.Services.WarehouseManager;
 using PackageFlow.API.Services.PackageLabelGenerator;
 using QuestPDF.Infrastructure;
 using System.Text;
@@ -66,6 +67,7 @@ builder.Services.AddAuthentication(options => {
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPackageHandlerService, PackageHandlerService>();
 builder.Services.AddScoped<ICourierService, CourierService>();
+builder.Services.AddScoped<IWarehouseManagerService, WarehouseManagerService>();
 builder.Services.AddScoped<IPackageLabelGeneratorService, PackageLabelGeneratorService>();
 
 builder.Services.AddAuthorization();
