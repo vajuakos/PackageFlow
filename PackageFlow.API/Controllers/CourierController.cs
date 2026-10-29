@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using PackageFlow.API.Services.Courier;
 using PackageFlow.Shared.Constants;
 using PackageFlow.Shared.DTOs.PackageHandler;
+using PackageFlow.Shared.DTOs.Common;
+using PackageFlow.Shared.DTOs.Courier;
 
 
 namespace PackageFlow.API.Controllers
@@ -59,12 +61,29 @@ namespace PackageFlow.API.Controllers
                 return Unauthorized("Unauthorized access!");
 
             var success = await _courierService
-                .RecordPickupAsync(trackingNumber, CurrentUserId.Value);
+                .RecordOutForDeliveryAsync(trackingNumber, CurrentUserId.Value);
 
             if (!success)
                 return BadRequest("The package could not be marked as out for delivery.");
 
             return Ok("Package marked as out for delivery successfully.");
+        }
+
+
+        [HttpGet("shipping-history")]
+        public async Task<ActionResult<List<CourierShippingHistoryResult>>> GetShippingHistory(
+            [FromQuery]DateTime startDate, [FromQuery]DateTime endDate)
+        {
+            if (CurrentUserId == null)
+                return Unauthorized("Unauthorized access!");
+
+            if (startDate >= endDate)
+                return BadRequest("The start date must be earlier than the end date.");
+
+            var history = await _courierService.GetShippingHistoryAsync(
+                CurrentUserId.Value, startDate, endDate);
+
+            return Ok(history);
         }
     }
 }
