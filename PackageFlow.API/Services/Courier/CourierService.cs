@@ -173,7 +173,7 @@ namespace PackageFlow.API.Services.Courier
             var now = DateTime.UtcNow;
 
             package.Status = Shared.Enums.PackageStatus.OutForDelivery;
-            package.PickedUpAt = now;
+            package.OutForDeliveryAt = now;
 
             var history = new PackageStatusHistory
             {
@@ -203,8 +203,6 @@ namespace PackageFlow.API.Services.Courier
             return await _dbContext.PackageStatusHistories
                 .AsNoTracking()
                 .Where(h =>
-                    (h.Package.PickupCourierId == courierId ||
-                    h.Package.DeliveryCourierId == courierId) &&
                     h.ChangedByUserId == courierId &&
                     h.Timestamp >= startDate &&
                     h.Timestamp < endDate)
@@ -213,7 +211,7 @@ namespace PackageFlow.API.Services.Courier
                 {
                     PackageId = h.PackageId,
                     TrackingNumber = h.Package.TrackingNumber,
-                    Status = h.Package.Status,
+                    Status = h.Status,
                     Timestamp = h.Timestamp,
                     Note = h.Note,
                     ChangedByUserId = h.ChangedByUserId
