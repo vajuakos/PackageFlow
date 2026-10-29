@@ -2,6 +2,7 @@
 using PackageFlow.API.Data;
 using PackageFlow.API.Models;
 using PackageFlow.Shared.DTOs.PackageHandler;
+using PackageFlow.Shared.DTOs.Courier;
 
 
 namespace PackageFlow.API.Services.Courier
@@ -188,6 +189,35 @@ namespace PackageFlow.API.Services.Courier
             await _dbContext.SaveChangesAsync();
 
             return true;
+        }
+
+
+        public async Task<List<CourierShippingHistoryResult>> GetShippingHistoryAsync(int courierId, DateTime startDate, DateTime endDate)
+        {
+            if (courierId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(courierId));
+
+            if (startDate >= endDate)
+                throw new ArgumentException("The start date must be earlier than the end date.");
+
+            return await _dbContext.PackageStatusHistories
+                .AsNoTracking()
+                .Where(h =>
+                    (h.Package.PickupCourierId == courierId ||
+                    h.Package.DeliveryCourierId == courierId) &&
+                    h.ChangedByUserId == courierId &&
+                    h.Timestamp >= startDate &&
+                    h.Timestamp < endDate)
+                .OrderByDescending(h => h.Timestamp)
+                .Select(h => new CourierShippingHistoryResult
+                {
+                    PackageId = h.PackageId,
+                    TrackingNumber = h.Package.TrackingNumber,
+                    Status = h.Package.Status,
+                    Timestamp = h.Timestamp,
+                    Note = h.Note,
+                    ChangedByUserId = h.ChangedByUserId
+                }).ToListAsync();
         }
     }
 }
