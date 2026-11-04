@@ -12,5 +12,9 @@ namespace PackageFlow.API.Services.WarehouseManager
         Task<List<CourierOptionResult>> GetCouriersAsync();
 
         Task<bool> AssignPickupCourierAsync(string trackingNumber, int courierUserId, int warehouseManagerId);
+
+        Task<List<DeliveryAssignmentPackageResult>> GetPackagesForDeliveryAssignmentAsync();
+
+        Task<bool> AssignDeliveryCourierAsync(string trackingNumber, int courierUserId, int warehouseManagerId);
     }
 }

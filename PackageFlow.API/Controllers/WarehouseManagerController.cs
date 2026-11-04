@@ -40,6 +40,9 @@ namespace PackageFlow.API.Controllers
         [HttpGet("pickup-assignment/packages")]
         public async Task<ActionResult<List<PickupAssignmentPackageResult>>> GetPackagesForPickupAssignment()
         {
+            if (CurrentUserId == null)
+                return Unauthorized("Unauthorized access!");
+
             var packages = await _warehouseManagerService
                 .GetPackagesForPickupAssignmentAsync();
 
@@ -50,6 +53,9 @@ namespace PackageFlow.API.Controllers
         [HttpGet("pickup-assignment/couriers")]
         public async Task<ActionResult<List<CourierOptionResult>>> GetCouriers()
         {
+            if (CurrentUserId == null)
+                return Unauthorized("Unauthorized access!");
+
             var couriers = await _warehouseManagerService
                 .GetCouriersAsync();
 
@@ -64,7 +70,7 @@ namespace PackageFlow.API.Controllers
                 return BadRequest("Tracking number cannot be empty.");
 
             if (request.CourierUserId <= 0)
-                return BadRequest("Invalid courer user ID.");
+                return BadRequest("Invalid courier user ID.");
 
             if (CurrentUserId == null)
                 return Unauthorized("Unauthorized access!");
@@ -79,6 +85,57 @@ namespace PackageFlow.API.Controllers
                 return BadRequest("The package could not be assigned.");
 
             return Ok("Pickup courier assigned successfully.");
+        }
+
+
+        [HttpGet("delivery-assignment/packages")]
+        public async Task<ActionResult<List<DeliveryAssignmentPackageResult>>> GetPackagesForDeliveryAssignment()
+        {
+            if (CurrentUserId == null)
+                return Unauthorized("Unauthorized access!");
+
+            var packages = await _warehouseManagerService
+                .GetPackagesForDeliveryAssignmentAsync();
+
+            return Ok(packages);
+        }
+
+
+        [HttpGet("delivery-assignment/couriers")]
+        public async Task<ActionResult<List<CourierOptionResult>>> GetCouriersForDeliveryAssignment()
+        {
+            if (CurrentUserId == null)
+                return Unauthorized("Unauthorized access!");
+
+            var couriers = await _warehouseManagerService
+                .GetCouriersAsync();
+
+            return Ok(couriers);
+        }
+
+
+        [HttpPut("delivery-assignment/packages/{trackingNumber}/courier")]
+        public async Task<IActionResult> AssignDeliveryCourier(string trackingNumber, [FromBody] AssignDeliveryCourierRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(trackingNumber))
+                return BadRequest("Tracking number cannot be empty.");
+
+            if (request.CourierUserId <= 0)
+                return BadRequest("Invalid courier user ID.");
+
+            if (CurrentUserId == null)
+                return Unauthorized("Unauthorized access!");
+
+            var success = await _warehouseManagerService
+                .AssignDeliveryCourierAsync(
+                    trackingNumber,
+                    request.CourierUserId,
+                    CurrentUserId.Value);
+
+            if (!success)
+                return BadRequest("The package could not be assigned.");
+
+            return Ok("Delivery courier assigned successfully.");
         }
 
     }

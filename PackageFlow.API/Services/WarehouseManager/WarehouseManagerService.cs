@@ -3,6 +3,7 @@ using PackageFlow.API.Data;
 using PackageFlow.API.Models;
 using PackageFlow.Shared.Enums;
 using PackageFlow.Shared.DTOs.WarehouseManager;
+using PackageFlow.Shared.DTOs.Common;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace PackageFlow.API.Services.WarehouseManager
@@ -69,6 +70,7 @@ namespace PackageFlow.API.Services.WarehouseManager
         public async Task<List<PickupAssignmentPackageResult>> GetPackagesForPickupAssignmentAsync()
         {
             return await _dbContext.Packages
+                .AsNoTracking()
                 .Where(p =>
                     p.Status == PackageStatus.Registered ||
                     p.Status == PackageStatus.PickupAssigned)
@@ -141,6 +143,90 @@ namespace PackageFlow.API.Services.WarehouseManager
                 Note = isReassignment
                     ? "The warehouse manager changed the assigned pickup courier."
                     : "The warehouse manager assigned a pickup courier."
+            };
+
+            _dbContext.PackageStatusHistories.Add(history);
+
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
+
+
+        public async Task<List<DeliveryAssignmentPackageResult>> GetPackagesForDeliveryAssignmentAsync()
+        {
+            return await _dbContext.Packages
+                .AsNoTracking()
+                .Where(p =>
+                    p.Status == PackageStatus.InWarehouse ||
+                    p.Status == PackageStatus.DeliveryAssigned)
+                .OrderByDescending(p => p.CreatedAt)
+                .Select(p => new DeliveryAssignmentPackageResult
+                {
+                    TrackingNumber = p.TrackingNumber,
+                    Status = p.Status,
+                    ScheduledPickupDate = p.ScheduledPickupDate,
+                    DeliveryCourierId = p.DeliveryCourierId,
+                    DeliveryCourierName = p.DeliveryCourier != null ? p.DeliveryCourier.FullName : null,
+                    RecipientName = p.RecipientUser != null ? p.RecipientUser.FullName : p.RecipientName,
+                    DeliveryAddress = new AddressResult
+                    {
+                        Country = p.DeliveryAddress.Country,
+                        State = p.DeliveryAddress.State,
+                        PostalCode = p.DeliveryAddress.PostalCode,
+                        City = p.DeliveryAddress.City,
+                        Street = p.DeliveryAddress.Street,
+                        StreetNumber = p.DeliveryAddress.StreetNumber,
+                        BuildingDetails = p.DeliveryAddress.BuildingDetails
+                    }
+                }).ToListAsync();
+        }
+
+
+        public async Task<bool> AssignDeliveryCourierAsync(string trackingNumber, int courierUserId, int warehouseManagerId)
+        {
+            if (string.IsNullOrWhiteSpace(trackingNumber))
+                throw new ArgumentException("Tracking number cannot be empty.",
+                    nameof(trackingNumber));
+
+            if (courierUserId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(courierUserId));
+
+            if (warehouseManagerId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(warehouseManagerId));
+
+            var package = await _dbContext.Packages
+                .FirstOrDefaultAsync(p => p.TrackingNumber == trackingNumber);
+
+            if (package == null)
+                return false;
+
+            if (package.Status != PackageStatus.InWarehouse &&
+                package.Status != PackageStatus.DeliveryAssigned)
+                return false;
+
+            var courierExists = await _dbContext.CourierProfiles
+                .AnyAsync(cp => cp.UserId == courierUserId);
+
+            if (!courierExists)
+                return false;
+
+            bool isReassignment = package.Status == PackageStatus.DeliveryAssigned;
+
+            var now = DateTime.UtcNow;
+
+            package.DeliveryCourierId = courierUserId;
+            package.Status = PackageStatus.DeliveryAssigned;
+
+            var history = new PackageStatusHistory
+            {
+                PackageId = package.Id,
+                Status = PackageStatus.DeliveryAssigned,
+                Timestamp = now,
+                ChangedByUserId = warehouseManagerId,
+                Note = isReassignment
+                    ? "The warehouse manager changed the assigned delivery courier."
+                    : "The warehouse manager assigned a delivery courier."
             };
 
             _dbContext.PackageStatusHistories.Add(history);
