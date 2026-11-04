@@ -39,7 +39,14 @@ namespace PackageFlow.Desktop
                 config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
             });
 
-            builder.Services.AddAuthorizationCore();
+            builder.Services.AddAuthorizationCore(options =>
+            {
+                options.AddPolicy("Customer", policy => policy.RequireRole(PackageFlow.Shared.Constants.UserRoles.Customer));
+                options.AddPolicy("Courier", policy => policy.RequireRole(PackageFlow.Shared.Constants.UserRoles.Courier));
+                options.AddPolicy("WarehouseManager", policy => policy.RequireRole(PackageFlow.Shared.Constants.UserRoles.WarehouseManager));
+                options.AddPolicy("Admin", policy => policy.RequireRole(PackageFlow.Shared.Constants.UserRoles.Admin));
+            });
+
             builder.Services.AddScoped<CustomAuthenticationStateProvider>();
             builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
                 sp.GetRequiredService<CustomAuthenticationStateProvider>());
