@@ -27,6 +27,10 @@ namespace PackageFlow.API.Services.WarehouseManager
             if (warehouseManagerId <= 0)
                 throw new ArgumentOutOfRangeException(nameof(warehouseManagerId));
 
+            var warehouse = await _dbContext.Warehouses.FirstOrDefaultAsync();
+            if (warehouse == null)
+                throw new InvalidOperationException("Central warehouse does not exist in the database.");
+            
             var package = await _dbContext.Packages
                 .FirstOrDefaultAsync(p =>
                     p.TrackingNumber == trackingNumber);
@@ -42,6 +46,7 @@ namespace PackageFlow.API.Services.WarehouseManager
             var now = DateTime.UtcNow;
 
             package.Status = Shared.Enums.PackageStatus.InWarehouse;
+            package.WarehouseId = warehouse.Id;
             package.ReceivedInWarehouseAt = now;
 
             var history = new PackageStatusHistory
