@@ -23,7 +23,6 @@ namespace PackageFlow.API.Controllers
                 ?? throw new ArgumentNullException(nameof(courierService));
         }
 
-
         [HttpGet("assigned-packages")]
         public async Task<ActionResult<List<PackageResult>>> GetAssignedPackages()
         {
@@ -35,7 +34,6 @@ namespace PackageFlow.API.Controllers
 
             return Ok(packages);
         }
-
 
         [HttpPost("packages/{trackingNumber}/pickup")]
         public async Task<ActionResult> RecordPickup(string trackingNumber)
@@ -53,7 +51,6 @@ namespace PackageFlow.API.Controllers
             return Ok("Package pickup recorded successfully.");
         }
 
-
         [HttpPost("packages/{trackingNumber}/out-for-delivery")]
         public async Task<ActionResult> RecordOutForDelivery(string trackingNumber)
         {
@@ -68,7 +65,6 @@ namespace PackageFlow.API.Controllers
 
             return Ok("Package marked as out for delivery successfully.");
         }
-
 
         [HttpGet("shipping-history")]
         public async Task<ActionResult<List<CourierShippingHistoryResult>>> GetShippingHistory(

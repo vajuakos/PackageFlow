@@ -36,7 +36,6 @@ namespace PackageFlow.API.Controllers
             return Ok("Package warehouse arrival recorded successfully.");
         }
 
-
         [HttpGet("pickup-assignment/packages")]
         public async Task<ActionResult<List<PickupAssignmentPackageResult>>> GetPackagesForPickupAssignment()
         {
@@ -49,7 +48,6 @@ namespace PackageFlow.API.Controllers
             return Ok(packages);
         }
 
-
         [HttpGet("pickup-assignment/couriers")]
         public async Task<ActionResult<List<CourierOptionResult>>> GetCouriers()
         {
@@ -61,7 +59,6 @@ namespace PackageFlow.API.Controllers
 
             return Ok(couriers);
         }
-
 
         [HttpPut("pickup-assignment/packages/{trackingNumber}/courier")]
         public async Task<IActionResult> AssignPickupCourier(string trackingNumber, [FromBody]AssignPickupCourierRequest request)
@@ -87,7 +84,6 @@ namespace PackageFlow.API.Controllers
             return Ok("Pickup courier assigned successfully.");
         }
 
-
         [HttpGet("delivery-assignment/packages")]
         public async Task<ActionResult<List<DeliveryAssignmentPackageResult>>> GetPackagesForDeliveryAssignment()
         {
@@ -100,7 +96,6 @@ namespace PackageFlow.API.Controllers
             return Ok(packages);
         }
 
-
         [HttpGet("delivery-assignment/couriers")]
         public async Task<ActionResult<List<CourierOptionResult>>> GetCouriersForDeliveryAssignment()
         {
@@ -112,7 +107,6 @@ namespace PackageFlow.API.Controllers
 
             return Ok(couriers);
         }
-
 
         [HttpPut("delivery-assignment/packages/{trackingNumber}/courier")]
         public async Task<IActionResult> AssignDeliveryCourier(string trackingNumber, [FromBody] AssignDeliveryCourierRequest request)

@@ -18,7 +18,6 @@ namespace PackageFlow.API.Services.WarehouseManager
                 ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
-
         public async Task<bool> RecordWarehouseArrivalAsync(string trackingNumber, int warehouseManagerId)
         {
             if (string.IsNullOrWhiteSpace(trackingNumber))
@@ -66,7 +65,6 @@ namespace PackageFlow.API.Services.WarehouseManager
             return true;
         }
 
-
         public async Task<List<PickupAssignmentPackageResult>> GetPackagesForPickupAssignmentAsync()
         {
             return await _dbContext.Packages
@@ -85,7 +83,6 @@ namespace PackageFlow.API.Services.WarehouseManager
                 }).ToListAsync();
         }
 
-
         public async Task<List<CourierOptionResult>> GetCouriersAsync()
         {
             return await _dbContext.CourierProfiles
@@ -97,7 +94,6 @@ namespace PackageFlow.API.Services.WarehouseManager
                     VehiclePlateNumber = cp.VehiclePlateNumber
                 }).ToListAsync();
         }
-
 
         public async Task<bool> AssignPickupCourierAsync(string trackingNumber, int courierUserId, int warehouseManagerId)
         {
@@ -152,7 +148,6 @@ namespace PackageFlow.API.Services.WarehouseManager
             return true;
         }
 
-
         public async Task<List<DeliveryAssignmentPackageResult>> GetPackagesForDeliveryAssignmentAsync()
         {
             return await _dbContext.Packages
@@ -181,7 +176,6 @@ namespace PackageFlow.API.Services.WarehouseManager
                     }
                 }).ToListAsync();
         }
-
 
         public async Task<bool> AssignDeliveryCourierAsync(string trackingNumber, int courierUserId, int warehouseManagerId)
         {
