@@ -103,7 +103,6 @@ namespace PackageFlow.API.Services.Courier
                 .ToListAsync();
         }
 
-
         public async Task<bool> RecordPickupAsync(string trackingNumber, int courierId)
         {
             if (string.IsNullOrWhiteSpace(trackingNumber))
@@ -147,7 +146,6 @@ namespace PackageFlow.API.Services.Courier
             return true;
         }
 
-
         public async Task<bool> RecordOutForDeliveryAsync(string trackingNumber, int courierId)
         {
             if (string.IsNullOrWhiteSpace(trackingNumber))
@@ -190,7 +188,6 @@ namespace PackageFlow.API.Services.Courier
 
             return true;
         }
-
 
         public async Task<List<CourierShippingHistoryResult>> GetShippingHistoryAsync(int courierId, DateTime startDate, DateTime endDate)
         {
