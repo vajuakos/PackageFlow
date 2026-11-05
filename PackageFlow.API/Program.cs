@@ -18,8 +18,8 @@ var builder = WebApplication.CreateBuilder(args);
 QuestPDF.Settings.License = LicenseType.Community;
 
 // Add services to the container.
-
 builder.Services.AddControllers();
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
@@ -70,7 +70,14 @@ builder.Services.AddScoped<ICourierService, CourierService>();
 builder.Services.AddScoped<IWarehouseManagerService, WarehouseManagerService>();
 builder.Services.AddScoped<IPackageLabelGeneratorService, PackageLabelGeneratorService>();
 
-builder.Services.AddAuthorization();
+// Authorization policies setup
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Customer", policy => policy.RequireRole("Customer"));
+    options.AddPolicy("Courier", policy => policy.RequireRole("Courier"));
+    options.AddPolicy("WarehouseManager", policy => policy.RequireRole("WarehouseManager"));
+    options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+});
 
 var app = builder.Build();
 
@@ -81,11 +88,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseCors("AllowBlazorClient");
 
 app.UseAuthentication();
-
 app.UseAuthorization();
 
 app.MapControllers();
