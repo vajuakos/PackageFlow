@@ -1,4 +1,5 @@
-﻿using PackageFlow.Shared.DTOs.Common;
+﻿using Microsoft.Extensions.Logging;
+using PackageFlow.Shared.DTOs.Common;
 using PackageFlow.Shared.DTOs.PackageHandler;
 using System.Net.Http.Json;
 
@@ -9,27 +10,52 @@ namespace PackageFlow.Desktop.Services.PackageHandler
         private const string BaseUrl = "api/package";
 
         private readonly HttpClient _httpClient;
+        private readonly ILogger<PackageHandlerService> _logger;
 
-        public PackageHandlerService(HttpClient httpClient)
+        public PackageHandlerService(HttpClient httpClient, ILogger<PackageHandlerService> logger)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            _logger = logger;
         }
 
         public async Task<bool> CreatePackageAsync(CreatePackageRequest request)
         {
+            if (request is null) throw new ArgumentNullException(nameof(request));
+
             var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/create", request);
 
-            return await response.Content.ReadFromJsonAsync<bool>();
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Package successfully created via API.");
+                return await response.Content.ReadFromJsonAsync<bool>();
+            }
+            else
+            {
+                _logger.LogWarning("Failed to create package. API returned status code: {StatusCode}", response.StatusCode);
+                return false;
+            }
         }
 
         public async Task<PackageResult?> GetPackageByTrackingNumberAsync(string trackingNumber)
         {
+            if (string.IsNullOrWhiteSpace(trackingNumber))
+                throw new ArgumentException("Tracking number is required.", nameof(trackingNumber));
+
+            var cleanTracking = trackingNumber.Trim();
+            _logger.LogInformation("Fetching package details by tracking number: {TrackingNumber}", cleanTracking);
+
             try
             {
-                return await _httpClient.GetFromJsonAsync<PackageResult?>($"{BaseUrl}/track/{trackingNumber.Trim()}");
+                var result = await _httpClient.GetFromJsonAsync<PackageResult?>($"{BaseUrl}/track/{cleanTracking}");
+                
+                if (result is null)
+                    _logger.LogWarning("Package not found on server for tracking number: {TrackingNumber}", cleanTracking);
+
+                return result;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Network or server error while fetching package by tracking number: {TrackingNumber}", cleanTracking);
                 return null;
             }
         }
@@ -40,35 +66,62 @@ namespace PackageFlow.Desktop.Services.PackageHandler
             {
                 var response = await _httpClient.GetFromJsonAsync<List<PackageResult>>($"{BaseUrl}/my-packages");
 
-                return response ?? new List<PackageResult>();
+                var packages = response ?? new List<PackageResult>();
+                _logger.LogInformation("Successfully loaded {PackageCount} packages for the user.", packages.Count);
+
+                return packages;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to fetch user packages.");
                 return new List<PackageResult>();
             }
         }
 
         public async Task<IReadOnlyList<PackageStatusHistoryResult>> GetPackageStatusHistoryAsync(string trackingNumber)
         {
+            if (string.IsNullOrWhiteSpace(trackingNumber))
+                throw new ArgumentException("Tracking number is required.", nameof(trackingNumber));
+
+            var cleanTracking = trackingNumber.Trim();
+            var url = $"{BaseUrl}/{cleanTracking}/history";
+
+            _logger.LogInformation("Fetching status history for tracking number: {TrackingNumber}", cleanTracking);
+
             try
             {
-                var url = $"{BaseUrl}/{trackingNumber.Trim()}/history";
-
                 var response = await _httpClient.GetFromJsonAsync<List<PackageStatusHistoryResult>>(url);
 
-                return response ?? new List<PackageStatusHistoryResult>();
+                var history = response ?? new List<PackageStatusHistoryResult>();
+                _logger.LogInformation("Successfully loaded {HistoryCount} history events for tracking number: {TrackingNumber}", history.Count, cleanTracking);
+
+                return history;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to fetch status history for tracking number: {TrackingNumber}", cleanTracking);
                 return new List<PackageStatusHistoryResult>();
             }
         }
 
         public async Task UpdatePackageDetailsAsync(string trackingNumber, UpdatePackageRequest request)
         {
-            var url = $"{BaseUrl}/{trackingNumber.Trim()}";
+            if (request is null) throw new ArgumentNullException(nameof(request));
+            if (string.IsNullOrWhiteSpace(trackingNumber)) throw new ArgumentException("Tracking number is required.", nameof(trackingNumber));
 
-            await _httpClient.PutAsJsonAsync(url, request);
+            var cleanTracking = trackingNumber.Trim();
+            var url = $"{BaseUrl}/{cleanTracking}";
+
+            var response = await _httpClient.PutAsJsonAsync(url, request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Package successfully updated. TrackingNumber: {TrackingNumber}", cleanTracking);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to update package. TrackingNumber: {TrackingNumber}, Status: {StatusCode}", cleanTracking, response.StatusCode);
+            }
         }
     }
 }
