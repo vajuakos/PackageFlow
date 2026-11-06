@@ -1,5 +1,5 @@
 ﻿@page "/packages/dashboard"
-@attribute [Authorize($"{UserRoles.Customer}")]
+@attribute [Authorize(Roles = UserRoles.Customer)]
 
 <MudGrid Spacing="4" Class="mb-6">
     <MudItem xs="12" md="3">
@@ -47,7 +47,7 @@
     </MudItem>
 </MudGrid>
 
-<AuthorizeView Roles="@($"{UserRoles.Customer}")">
+<AuthorizeView Roles="@UserRoles.Customer">
     <NotAuthorized>
         <MudPaper Class="pa-12 mb-6 d-flex flex-column align-center justify-center">
 
