@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components.Authorization;
+﻿using CommunityToolkit.Maui;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Logging;
 using MudBlazor;
 using MudBlazor.Services;
@@ -7,7 +8,7 @@ using PackageFlow.Desktop.Services;
 using PackageFlow.Desktop.Services.Authentication;
 using PackageFlow.Desktop.Services.PackageHandler;
 using PackageFlow.Desktop.Services.PackageLabelGenerator;
-using CommunityToolkit.Maui;
+using Serilog;
 
 namespace PackageFlow.Desktop
 {
@@ -15,6 +16,11 @@ namespace PackageFlow.Desktop
     {
         public static MauiApp CreateMauiApp()
         {
+            Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.Debug()
+            .CreateLogger();
+
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
