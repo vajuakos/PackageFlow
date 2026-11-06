@@ -82,6 +82,13 @@ namespace PackageFlow.API.Services.PackageHandler
             await _dbContext.Packages.AddAsync(package);
             var savedChanges = await _dbContext.SaveChangesAsync();
 
+            if (savedChanges > 0)
+            {
+                _logger.LogInformation(
+                    "New package request created successfully! TrackingNumber: {TrackingNumber}, UserId: {UserId}",
+                    trackingNumber, userId);
+            }
+
             return savedChanges > 0;
         }
 
@@ -284,11 +291,20 @@ namespace PackageFlow.API.Services.PackageHandler
                 .FirstOrDefaultAsync(p => p.TrackingNumber == trackingNumber);
 
             if (existingPackage is null)
+            {
+                _logger.LogWarning("Package update rejected, package not found. TrackingNumber: {TrackingNumber}", trackingNumber);
+
                 throw new KeyNotFoundException("Package not found.");
+            }
 
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             if (existingPackage.ScheduledPickupDate <= today)
+            {
+                _logger.LogWarning("Package update rejected, modification deadline has expired. TrackingNumber: {TrackingNumber}, ScheduledPickupDate: {ScheduledPickupDate}",
+                    trackingNumber, existingPackage.ScheduledPickupDate);
+
                 throw new InvalidOperationException("The modification deadline has expired.");
+            }
 
             var newPickupDate = DateOnly.FromDateTime(request.ScheduledPickupDate);
 
@@ -303,6 +319,9 @@ namespace PackageFlow.API.Services.PackageHandler
             });
 
             await _dbContext.SaveChangesAsync();
+
+            _logger.LogInformation("Package details successfully updated. TrackingNumber: {TrackingNumber}, NewSize: {NewSize}, NewPickupDate: {NewPickupDate}",
+                trackingNumber, request.Size, newPickupDate);
         }
     }
 }
