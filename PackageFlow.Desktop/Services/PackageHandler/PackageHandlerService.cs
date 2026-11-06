@@ -26,7 +26,7 @@ namespace PackageFlow.Desktop.Services.PackageHandler
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<PackageResult?>($"api/package/track/{trackingNumber.Trim()}");
+                return await _httpClient.GetFromJsonAsync<PackageResult?>($"{BaseUrl}/track/{trackingNumber.Trim()}");
             }
             catch (Exception)
             {
@@ -38,7 +38,7 @@ namespace PackageFlow.Desktop.Services.PackageHandler
         {
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<List<PackageResult>>("api/package/my-packages");
+                var response = await _httpClient.GetFromJsonAsync<List<PackageResult>>($"{BaseUrl}/my-packages");
 
                 return response ?? new List<PackageResult>();
             }
@@ -52,7 +52,7 @@ namespace PackageFlow.Desktop.Services.PackageHandler
         {
             try
             {
-                var url = $"api/package/{trackingNumber.Trim()}/history";
+                var url = $"{BaseUrl}/{trackingNumber.Trim()}/history";
 
                 var response = await _httpClient.GetFromJsonAsync<List<PackageStatusHistoryResult>>(url);
 
@@ -66,7 +66,7 @@ namespace PackageFlow.Desktop.Services.PackageHandler
 
         public async Task UpdatePackageDetailsAsync(string trackingNumber, UpdatePackageRequest request)
         {
-            var url = $"api/package/{trackingNumber.Trim()}";
+            var url = $"{BaseUrl}/{trackingNumber.Trim()}";
 
             await _httpClient.PutAsJsonAsync(url, request);
         }

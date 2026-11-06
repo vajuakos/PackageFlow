@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using PackageFlow.API.Models;
 using PackageFlow.API.Services.PackageHandler;
 using PackageFlow.API.Services.PackageLabelGenerator;
 using PackageFlow.Shared.Constants;
+using PackageFlow.Shared.DTOs.Common;
 using PackageFlow.Shared.DTOs.PackageHandler;
 
 namespace PackageFlow.API.Controllers
@@ -50,7 +50,7 @@ namespace PackageFlow.API.Controllers
         }
 
         [HttpGet("my-packages")]
-        [Authorize($"{UserRoles.Customer}")]
+        [Authorize(Roles = UserRoles.Customer)]
         public async Task<ActionResult<List<PackageResult>>> GetPackagesForUser()
         {
             if (CurrentUserId == null) return Unauthorized("Unauthorized access!");
@@ -62,7 +62,7 @@ namespace PackageFlow.API.Controllers
 
         [HttpGet("{trackingNumber}/history")]
         [AllowAnonymous]
-        public async Task<ActionResult<IReadOnlyList<PackageStatusHistory>>> GetPackageStatusHistory(string trackingNumber)
+        public async Task<ActionResult<IReadOnlyList<PackageStatusHistoryResult>>> GetPackageStatusHistory(string trackingNumber)
         {
             if (string.IsNullOrWhiteSpace(trackingNumber))
                 return BadRequest("Tracking number must be provided!");
@@ -76,7 +76,7 @@ namespace PackageFlow.API.Controllers
         }
 
         [HttpPut("{trackingNumber}")]
-        [Authorize($"{UserRoles.Customer}")]
+        [Authorize(Roles = UserRoles.Customer)]
         public async Task<IActionResult> UpdatePackage(string trackingNumber, [FromBody] UpdatePackageRequest request)
         {
             if (string.IsNullOrWhiteSpace(trackingNumber))
