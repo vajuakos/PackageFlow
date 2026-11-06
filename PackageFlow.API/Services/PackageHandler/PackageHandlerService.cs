@@ -11,10 +11,12 @@ namespace PackageFlow.API.Services.PackageHandler
     public class PackageHandlerService : IPackageHandlerService
     {
         private readonly AppDbContext _dbContext;
+        private readonly ILogger<PackageHandlerService> _logger;
 
-        public PackageHandlerService(AppDbContext dbContext)
+        public PackageHandlerService(AppDbContext dbContext, ILogger<PackageHandlerService> logger)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _logger = logger;
         }
 
         public async Task<bool> CreatePackageAsync(CreatePackageRequest request, int? userId)

@@ -6,16 +6,34 @@ using PackageFlow.API.Data;
 using PackageFlow.API.Data.Seed;
 using PackageFlow.API.Models;
 using PackageFlow.API.Services.Authentication;
-using PackageFlow.API.Services.PackageHandler;
 using PackageFlow.API.Services.Courier;
-using PackageFlow.API.Services.WarehouseManager;
+using PackageFlow.API.Services.PackageHandler;
 using PackageFlow.API.Services.PackageLabelGenerator;
+using PackageFlow.API.Services.WarehouseManager;
 using QuestPDF.Infrastructure;
+using Serilog;
+using Serilog.Formatting.Compact;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 QuestPDF.Settings.License = LicenseType.Community;
+
+// Serilog configuration
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
+
+builder.Host.UseSerilog((context, services, loggerConfiguration) => loggerConfiguration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .WriteTo.Console()
+        .WriteTo.File(
+            formatter: new CompactJsonFormatter(),
+            path: "Logs/api-log-.json",
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 14));
 
 // Add services to the container.
 
@@ -80,7 +98,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+//No HTTPS certificate configured for local port 8080
+//app.UseHttpsRedirection();
 
 app.UseCors("AllowBlazorClient");
 
