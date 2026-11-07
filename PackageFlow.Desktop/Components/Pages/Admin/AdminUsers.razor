@@ -1,0 +1,206 @@
+@page "/admin/users"
+
+<PageTitle>Felhasználók kezelése</PageTitle>
+
+<MudPaper Elevation="2" Class="pa-4 mb-4 rounded-lg d-flex align-center">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   Class="mr-4"
+                   OnClick="GoBack" />
+    <div>
+        <MudText Typo="Typo.h5" Style="font-weight: 700;">Felhasználók kezelése</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Futárok, raktárosok, adminisztrátorok és regisztrált ügyfelek.</MudText>
+    </div>
+    <MudSpacer />
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.PersonAdd"
+               OnClick="@(() => NavigationManager.NavigateTo("/admin/users/create"))">
+        Új munkatárs
+    </MudButton>
+</MudPaper>
+
+<MudPaper Elevation="1" Class="pa-3 mb-4 rounded-lg">
+    <MudGrid Spacing="3" Class="align-center">
+        <MudItem xs="12" md="7">
+            <MudTextField @bind-Value="searchText"
+                          Placeholder="Keresés név, e-mail vagy telefonszám alapján"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          Clearable="true" />
+        </MudItem>
+        <MudItem xs="12" md="5">
+            <MudSelect T="string"
+                       Value="roleFilter"
+                       ValueChanged="OnRoleFilterChanged"
+                       Label="Szerepkör"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense">
+                <MudSelectItem T="string" Value="@string.Empty">Mindenki</MudSelectItem>
+                <MudSelectItem T="string" Value="@UserRoles.Courier">Futárok</MudSelectItem>
+                <MudSelectItem T="string" Value="@UserRoles.WarehouseManager">Raktárosok</MudSelectItem>
+                <MudSelectItem T="string" Value="@UserRoles.Customer">Ügyfelek</MudSelectItem>
+                <MudSelectItem T="string" Value="@UserRoles.Admin">Adminisztrátorok</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="mx-auto d-block my-8" />
+}
+else
+{
+    <MudTable Items="@users"
+              Filter="new Func<AdminUserResult, bool>(FilterUser)"
+              Hover="true"
+              Dense="true"
+              Elevation="1"
+              Class="rounded-lg"
+              RowsPerPage="15"
+              OnRowClick="@((TableRowClickEventArgs<AdminUserResult> args) => OpenUser(args.Item!.Id))"
+              RowStyle="cursor: pointer;">
+        <HeaderContent>
+            <MudTh>Név</MudTh>
+            <MudTh>E-mail</MudTh>
+            <MudTh>Telefonszám</MudTh>
+            <MudTh>Szerepkör</MudTh>
+            <MudTh>Rendszám</MudTh>
+            <MudTh>Regisztrált</MudTh>
+            <MudTh Style="text-align: right;">Műveletek</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Név">
+                <MudText Typo="Typo.body2" Style="font-weight: 600;">@context.FullName</MudText>
+            </MudTd>
+            <MudTd DataLabel="E-mail">@context.Email</MudTd>
+            <MudTd DataLabel="Telefonszám">@(context.PhoneNumber ?? "–")</MudTd>
+            <MudTd DataLabel="Szerepkör">
+                <MudChip T="string" Size="Size.Small" Color="@GetRoleColor(context.Role)" Variant="Variant.Outlined">
+                    @GetRoleDisplayName(context.Role)
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Rendszám">@(context.VehiclePlateNumber ?? "–")</MudTd>
+            <MudTd DataLabel="Regisztrált">@context.CreatedAt.ToLocalTime().ToString("yyyy.MM.dd.")</MudTd>
+            <MudTd Style="text-align: right; white-space: nowrap;">
+                <div class="d-flex justify-end align-center gap-1" @onclick:stopPropagation="true">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   OnClick="@(() => OpenUser(context.Id))" />
+
+                    @if (pendingDeleteUserId == context.Id)
+                    {
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Error"
+                                   Size="Size.Small"
+                                   OnClick="@(() => DeleteUser(context))">
+                            Biztosan törlöd?
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       Color="Color.Error"
+                                       Size="Size.Small"
+                                       OnClick="@(() => pendingDeleteUserId = context.Id)" />
+                    }
+                </div>
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="pa-6">Nincsenek megjeleníthető felhasználók!</MudText>
+        </NoRecordsContent>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+}
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] IAdminService AdminService { get; set; } = default!;
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
+
+    private List<AdminUserResult> users = new();
+    private bool isLoading = true;
+
+    private string searchText = string.Empty;
+    private string roleFilter = string.Empty;
+    private int? pendingDeleteUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        isLoading = true;
+        pendingDeleteUserId = null;
+
+        users = await AdminService.GetUsersAsync(string.IsNullOrEmpty(roleFilter) ? null : roleFilter);
+
+        isLoading = false;
+    }
+
+    private async Task OnRoleFilterChanged(string value)
+    {
+        roleFilter = value ?? string.Empty;
+        await LoadUsers();
+    }
+
+    private bool FilterUser(AdminUserResult user)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+            return true;
+
+        var search = searchText.Trim();
+
+        return user.FullName.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || user.Email.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || (user.PhoneNumber?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false);
+    }
+
+    private async Task DeleteUser(AdminUserResult user)
+    {
+        var success = await AdminService.DeleteUserAsync(user.Id);
+
+        if (success)
+        {
+            users.RemoveAll(u => u.Id == user.Id);
+            Snackbar.Add($"{user.FullName} törölve.", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("A törlés sikertelen! Saját magadat nem törölheted, és az aktív csomaggal rendelkező futár csomagjait előbb át kell rendelni.", Severity.Error);
+        }
+
+        pendingDeleteUserId = null;
+    }
+
+    private static string GetRoleDisplayName(string role) => role switch
+    {
+        UserRoles.Customer => "Ügyfél",
+        UserRoles.Courier => "Futár",
+        UserRoles.WarehouseManager => "Raktáros",
+        UserRoles.Admin => "Adminisztrátor",
+        _ => "Ismeretlen"
+    };
+
+    private static Color GetRoleColor(string role) => role switch
+    {
+        UserRoles.Courier => Color.Info,
+        UserRoles.WarehouseManager => Color.Warning,
+        UserRoles.Admin => Color.Error,
+        _ => Color.Success
+    };
+
+    private void OpenUser(int userId) => NavigationManager.NavigateTo($"/admin/users/{userId}");
+
+    private void GoBack() => NavigationManager.NavigateTo("/admin");
+}

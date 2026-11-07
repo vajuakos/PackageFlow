@@ -1,0 +1,410 @@
+@page "/admin/packages/{TrackingNumber}"
+
+<PageTitle>Csomag szerkesztése</PageTitle>
+
+<MudPaper Elevation="2" Class="pa-4 mb-4 rounded-lg d-flex align-center">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   Class="mr-4"
+                   OnClick="GoBack" />
+    <div>
+        <div class="d-flex align-center gap-2">
+            <MudText Typo="Typo.h5" Style="font-weight: 700;">Csomag szerkesztése:</MudText>
+            <MudText Typo="Typo.h5" Style="font-weight: 700;" Color="Color.Primary">@TrackingNumber</MudText>
+        </div>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Adminisztrátorként bármikor módosíthatod a csomag adatait és a futár-hozzárendelést.</MudText>
+    </div>
+</MudPaper>
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="mx-auto d-block my-8" />
+}
+else if (package == null)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="rounded-lg">
+        A(z) @TrackingNumber azonosítójú csomag nem található.
+    </MudAlert>
+}
+else
+{
+    <MudGrid Spacing="4">
+
+        <MudItem xs="12" md="7" lg="8">
+            <MudPaper Elevation="2" Class="pa-6 rounded-lg h-100">
+                <EditForm Model="request" OnValidSubmit="SavePackage">
+                    <DataAnnotationsValidator />
+
+                    <MudText Typo="Typo.subtitle1" Style="font-weight: 600;" Class="mb-4">Csomagjellemzők</MudText>
+
+                    <MudGrid Spacing="3" Class="mb-6">
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="PackageStatus"
+                                       Label="Státusz"
+                                       @bind-Value="request.Status"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense">
+                                @foreach (var status in Enum.GetValues<PackageStatus>())
+                                {
+                                    <MudSelectItem T="PackageStatus" Value="@status">@status.ToDisplayName()</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+                            <MudDatePicker Label="Tervezett felvételi dátum"
+                                           @bind-Date="selectedPickupDate"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense" />
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="PackageSize"
+                                       Label="Méretkategória"
+                                       @bind-Value="request.Size"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense">
+                                @foreach (var size in Enum.GetValues<PackageSize>())
+                                {
+                                    <MudSelectItem T="PackageSize" Value="@size">@size.ToDisplayName()</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+                            <MudNumericField T="decimal"
+                                             Label="Súly (kg)"
+                                             @bind-Value="request.WeightKg"
+                                             For="@(() => request.WeightKg)"
+                                             Min="0.1m"
+                                             Step="0.1m"
+                                             Variant="Variant.Outlined"
+                                             Margin="Margin.Dense" />
+                        </MudItem>
+                    </MudGrid>
+
+                    <div class="d-flex align-center mb-4">
+                        <MudIcon Icon="@Icons.Material.Filled.LocationOn" Color="Color.Success" Class="mr-2" />
+                        <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">Címzett és kézbesítési cím</MudText>
+                    </div>
+
+                    <MudGrid Spacing="3" Class="mb-6">
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="Címzett neve" @bind-Value="request.RecipientName" For="@(() => request.RecipientName)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="Címzett telefonszáma" @bind-Value="request.RecipientPhone" For="@(() => request.RecipientPhone)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField Label="Címzett e-mail címe" @bind-Value="request.RecipientEmail" For="@(() => request.RecipientEmail)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="Ország" @bind-Value="request.DeliveryCountry" For="@(() => request.DeliveryCountry)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="Megye" @bind-Value="request.DeliveryState" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+
+                        <MudItem xs="12" sm="4">
+                            <MudTextField Label="Irányítószám" @bind-Value="request.DeliveryPostalCode" For="@(() => request.DeliveryPostalCode)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12" sm="8">
+                            <MudTextField Label="Város / Település" @bind-Value="request.DeliveryCity" For="@(() => request.DeliveryCity)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+
+                        <MudItem xs="12" sm="9">
+                            <MudTextField Label="Utca, tér, út" @bind-Value="request.DeliveryStreet" For="@(() => request.DeliveryStreet)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12" sm="3">
+                            <MudTextField Label="Házszám" @bind-Value="request.DeliveryStreetNumber" For="@(() => request.DeliveryStreetNumber)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudTextField Label="Épület, emelet, ajtó" @bind-Value="request.DeliveryBuildingDetails" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </MudItem>
+                    </MudGrid>
+
+                    <div class="d-flex align-center mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Person" Color="Color.Info" Class="mr-2" />
+                        <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">Feladó</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="ml-2">(csak olvasható)</MudText>
+                    </div>
+                    <MudText Typo="Typo.body2" Class="mb-6">
+                        @package.SenderName <span class="mud-text-secondary">• @package.SenderEmail • @package.SenderPhone</span><br />
+                        <span class="mud-text-secondary">@package.SenderAddress.PostalCode @package.SenderAddress.City, @package.SenderAddress.Street @package.SenderAddress.StreetNumber</span>
+                    </MudText>
+
+                    <div class="d-flex justify-end gap-3 mt-6">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   OnClick="GoBack"
+                                   Disabled="isSaving">
+                            Mégse
+                        </MudButton>
+                        <MudButton ButtonType="ButtonType.Submit"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Save"
+                                   Disabled="isSaving">
+                            @(isSaving ? "Mentés folyamatban..." : "Módosítások mentése")
+                        </MudButton>
+                    </div>
+                </EditForm>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="5" lg="4">
+            <MudPaper Elevation="2" Class="pa-6 mb-4 rounded-lg">
+                <div class="d-flex align-center mb-4">
+                    <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Color="Color.Primary" Class="mr-2" />
+                    <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">Futár-hozzárendelés</MudText>
+                </div>
+
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Jelenlegi felvételi futár</MudText>
+                <MudText Typo="Typo.body1" Class="mb-2" Style="font-weight: 600;">@(package.PickupCourierName ?? "Nincs kiosztva")</MudText>
+
+                <div class="d-flex align-center gap-2 mb-6">
+                    <MudSelect T="int?"
+                               Label="Új felvételi futár"
+                               @bind-Value="selectedPickupCourierId"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Disabled="@(!CanChangePickupCourier)">
+                        @foreach (var courier in couriers)
+                        {
+                            <MudSelectItem T="int?" Value="@((int?)courier.UserId)">@courier.FullName (@courier.VehiclePlateNumber)</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               OnClick="AssignPickupCourier"
+                               Disabled="@(!CanChangePickupCourier || selectedPickupCourierId == null || isSaving)">
+                        Mentés
+                    </MudButton>
+                </div>
+
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Jelenlegi kiszállító futár</MudText>
+                <MudText Typo="Typo.body1" Class="mb-2" Style="font-weight: 600;">@(package.DeliveryCourierName ?? "Nincs kiosztva")</MudText>
+
+                <div class="d-flex align-center gap-2">
+                    <MudSelect T="int?"
+                               Label="Új kiszállító futár"
+                               @bind-Value="selectedDeliveryCourierId"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Disabled="@(!CanChangeDeliveryCourier)">
+                        @foreach (var courier in couriers)
+                        {
+                            <MudSelectItem T="int?" Value="@((int?)courier.UserId)">@courier.FullName (@courier.VehiclePlateNumber)</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               OnClick="AssignDeliveryCourier"
+                               Disabled="@(!CanChangeDeliveryCourier || selectedDeliveryCourierId == null || isSaving)">
+                        Mentés
+                    </MudButton>
+                </div>
+
+                @if (!CanChangePickupCourier && !CanChangeDeliveryCourier)
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-4 rounded-lg">
+                        Ebben a státuszban (@package.Status.ToDisplayName()) nincs módosítható futár-hozzárendelés.
+                    </MudAlert>
+                }
+            </MudPaper>
+
+            <MudPaper Elevation="0" Class="pa-6 rounded-lg border-solid border-2 mud-border-lines-default">
+                <div class="d-flex align-center mb-6">
+                    <MudIcon Icon="@Icons.Material.Filled.History" Color="Color.Info" Class="mr-2" />
+                    <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">Nyomkövetési előzmények</MudText>
+                </div>
+
+                @if (statusHistory == null || !statusHistory.Any())
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Nincsenek elérhető előzmények ehhez a csomaghoz.</MudText>
+                }
+                else
+                {
+                    <MudStack Spacing="0" Class="pr-2" Style="max-height: 450px; overflow-y: auto;">
+                        <MudTimeline>
+                            @foreach (var history in statusHistory.OrderByDescending(h => h.Timestamp))
+                            {
+                                <MudTimelineItem Color="Color.Info">
+                                    <MudText Typo="Typo.button">@history.Status.ToDisplayName()</MudText>
+                                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@history.Timestamp.ToLocalTime().ToString("yyyy.MM.dd. HH:mm")</MudText>
+                                    @if (history.ChangedByUser != null)
+                                    {
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@history.ChangedByUser.FullName</MudText>
+                                    }
+                                </MudTimelineItem>
+                            }
+                        </MudTimeline>
+                    </MudStack>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] IAdminService AdminService { get; set; } = default!;
+    [Inject] IPackageHandlerService PackageHandler { get; set; } = default!;
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
+
+    [Parameter]
+    public string TrackingNumber { get; set; } = string.Empty;
+
+    private bool isLoading = true;
+    private bool isSaving = false;
+
+    private AdminPackageResult? package;
+    private AdminUpdatePackageRequest request = new();
+    private DateTime? selectedPickupDate;
+
+    private List<CourierOptionResult> couriers = new();
+    private int? selectedPickupCourierId;
+    private int? selectedDeliveryCourierId;
+
+    private List<PackageStatusHistoryResult>? statusHistory;
+
+    private bool CanChangePickupCourier => package != null &&
+        package.Status is PackageStatus.Registered or PackageStatus.PickupAssigned or PackageStatus.PickedUp;
+
+    private bool CanChangeDeliveryCourier => package != null &&
+        package.Status is PackageStatus.InWarehouse or PackageStatus.DeliveryAssigned
+            or PackageStatus.OutForDelivery or PackageStatus.Failed;
+
+    protected override async Task OnInitializedAsync()
+    {
+        couriers = await AdminService.GetCouriersAsync();
+        await LoadPackage();
+    }
+
+    private async Task LoadPackage()
+    {
+        isLoading = true;
+
+        var packageTask = AdminService.GetPackageAsync(TrackingNumber);
+        var historyTask = PackageHandler.GetPackageStatusHistoryAsync(TrackingNumber);
+
+        await Task.WhenAll(packageTask, historyTask);
+
+        package = packageTask.Result;
+        statusHistory = historyTask.Result.ToList();
+
+        if (package != null)
+        {
+            request = new AdminUpdatePackageRequest
+            {
+                Status = package.Status,
+                Size = package.Size,
+                WeightKg = package.WeightKg,
+                ScheduledPickupDate = package.ScheduledPickupDate.ToDateTime(TimeOnly.MinValue),
+
+                RecipientName = package.RecipientName,
+                RecipientEmail = package.RecipientEmail,
+                RecipientPhone = package.RecipientPhone,
+
+                DeliveryCountry = package.DeliveryAddress.Country,
+                DeliveryState = package.DeliveryAddress.State,
+                DeliveryPostalCode = package.DeliveryAddress.PostalCode,
+                DeliveryCity = package.DeliveryAddress.City,
+                DeliveryStreet = package.DeliveryAddress.Street,
+                DeliveryStreetNumber = package.DeliveryAddress.StreetNumber,
+                DeliveryBuildingDetails = package.DeliveryAddress.BuildingDetails
+            };
+
+            selectedPickupDate = request.ScheduledPickupDate;
+            selectedPickupCourierId = package.PickupCourierId;
+            selectedDeliveryCourierId = package.DeliveryCourierId;
+        }
+
+        isLoading = false;
+    }
+
+    private async Task SavePackage()
+    {
+        if (package == null) return;
+
+        isSaving = true;
+
+        try
+        {
+            if (selectedPickupDate.HasValue)
+                request.ScheduledPickupDate = selectedPickupDate.Value;
+
+            var success = await AdminService.UpdatePackageAsync(TrackingNumber, request);
+
+            if (success)
+            {
+                Snackbar.Add("A csomag adatai sikeresen frissítve.", Severity.Success);
+                await LoadPackage();
+            }
+            else
+            {
+                Snackbar.Add("A mentés sikertelen! A kiválasztott státuszhoz lehet, hogy futárt kell rendelni.", Severity.Error);
+            }
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task AssignPickupCourier()
+    {
+        if (selectedPickupCourierId == null) return;
+
+        isSaving = true;
+
+        try
+        {
+            var success = await AdminService.AssignPickupCourierAsync(TrackingNumber, selectedPickupCourierId.Value);
+
+            if (success)
+            {
+                Snackbar.Add("A felvételi futár sikeresen módosítva.", Severity.Success);
+                await LoadPackage();
+            }
+            else
+            {
+                Snackbar.Add("A felvételi futár módosítása sikertelen!", Severity.Error);
+            }
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task AssignDeliveryCourier()
+    {
+        if (selectedDeliveryCourierId == null) return;
+
+        isSaving = true;
+
+        try
+        {
+            var success = await AdminService.AssignDeliveryCourierAsync(TrackingNumber, selectedDeliveryCourierId.Value);
+
+            if (success)
+            {
+                Snackbar.Add("A kiszállító futár sikeresen módosítva.", Severity.Success);
+                await LoadPackage();
+            }
+            else
+            {
+                Snackbar.Add("A kiszállító futár módosítása sikertelen!", Severity.Error);
+            }
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void GoBack() => NavigationManager.NavigateTo("/admin/packages");
+}
