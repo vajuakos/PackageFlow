@@ -1,0 +1,335 @@
+@page "/admin/statistics"
+
+<style>
+    .stat-bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 3px;
+        height: 170px;
+        padding-top: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .stat-bar-column {
+        flex: 1 1 0;
+        min-width: 4px;
+        height: 100%;
+        display: flex;
+        align-items: flex-end;
+        gap: 1px;
+    }
+
+    .stat-bar {
+        flex: 1 1 0;
+        border-radius: 3px 3px 0 0;
+        min-height: 2px;
+        transition: opacity 0.2s;
+    }
+
+    .stat-bar:hover {
+        opacity: 0.75;
+    }
+
+    .stat-bar-labels {
+        display: flex;
+        gap: 3px;
+        margin-top: 4px;
+    }
+
+    .stat-bar-labels span {
+        flex: 1 1 0;
+        min-width: 4px;
+        font-size: 0.65rem;
+        text-align: center;
+        overflow: hidden;
+        white-space: nowrap;
+        opacity: 0.6;
+    }
+
+    .legend-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        margin-right: 4px;
+    }
+</style>
+
+<PageTitle>Statisztikák</PageTitle>
+
+<MudPaper Elevation="2" Class="pa-4 mb-4 rounded-lg d-flex align-center">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   Class="mr-4"
+                   OnClick="GoBack" />
+    <div>
+        <MudText Typo="Typo.h5" Style="font-weight: 700;">Statisztikák</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Raktárkihasználtság és a futárok által elvégzett szállítások.</MudText>
+    </div>
+</MudPaper>
+
+<MudPaper Elevation="1" Class="pa-3 mb-4 rounded-lg">
+    <div class="d-flex flex-wrap align-center gap-3">
+        <MudDatePicker Label="Kezdő nap" @bind-Date="startDate" MaxDate="DateTime.Today" Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width: 200px;" />
+        <MudDatePicker Label="Záró nap" @bind-Date="endDate" MaxDate="DateTime.Today" Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width: 200px;" />
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" OnClick="LoadStatistics" Disabled="isLoading">
+            Lekérdezés
+        </MudButton>
+
+        <MudSpacer />
+
+        <MudButtonGroup Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small">
+            <MudButton OnClick="@(() => SetPreset(7))">7 nap</MudButton>
+            <MudButton OnClick="@(() => SetPreset(30))">30 nap</MudButton>
+            <MudButton OnClick="@(() => SetPreset(90))">90 nap</MudButton>
+        </MudButtonGroup>
+    </div>
+</MudPaper>
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="mx-auto d-block my-8" />
+}
+else if (statistics == null)
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="rounded-lg">
+        A statisztikák betöltése sikertelen.
+    </MudAlert>
+}
+else
+{
+    <MudGrid Spacing="3" Class="mb-4">
+        @foreach (var kpi in GetKpis())
+        {
+            <MudItem xs="12" sm="6" md="4" lg="2" Style="flex-grow: 1;">
+                <MudPaper Elevation="2" Class="pa-4 rounded-lg h-100">
+                    <div class="d-flex align-center mb-2">
+                        <MudIcon Icon="@kpi.Icon" Color="@kpi.Color" Size="Size.Small" Class="mr-2" />
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@kpi.Label</MudText>
+                    </div>
+                    <MudText Typo="Typo.h5" Style="font-weight: 700;">@kpi.Value</MudText>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+
+    @foreach (var warehouse in statistics.Warehouses)
+    {
+        <MudPaper Elevation="2" Class="pa-6 mb-4 rounded-lg">
+            <div class="d-flex align-center mb-4">
+                <MudIcon Icon="@Icons.Material.Filled.Warehouse" Color="Color.Primary" Class="mr-2" />
+                <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">Raktárkihasználtság – @warehouse.WarehouseName</MudText>
+            </div>
+
+            <MudGrid Spacing="4" Class="mb-4">
+                <MudItem xs="12" md="6">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Jelenlegi kihasználtság</MudText>
+                    <div class="d-flex align-center gap-3">
+                        <MudProgressLinear Value="@Math.Min(warehouse.CurrentUtilizationPercent, 100)"
+                                           Color="@GetUtilizationColor(warehouse.CurrentUtilizationPercent)"
+                                           Size="Size.Large"
+                                           Rounded="true"
+                                           Class="flex-grow-1" />
+                        <MudText Typo="Typo.h6" Style="font-weight: 700; min-width: 70px; text-align: right;">@warehouse.CurrentUtilizationPercent.ToString("0.#")%</MudText>
+                    </div>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        @warehouse.CurrentPackageCount / @warehouse.MaxCapacity csomag
+                    </MudText>
+                </MudItem>
+                <MudItem xs="6" md="3">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Csúcs az időszakban</MudText>
+                    <MudText Typo="Typo.h6" Style="font-weight: 700;">@warehouse.PeakPackageCount csomag</MudText>
+                </MudItem>
+                <MudItem xs="6" md="3">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Átlagos kihasználtság</MudText>
+                    <MudText Typo="Typo.h6" Style="font-weight: 700;">@warehouse.AverageUtilizationPercent.ToString("0.#")%</MudText>
+                </MudItem>
+            </MudGrid>
+
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Raktárban lévő csomagok száma napzáráskor</MudText>
+            @{
+                var maxStored = Math.Max(1, warehouse.History.Count == 0 ? 1 : warehouse.History.Max(h => h.PackageCount));
+            }
+            <div class="stat-bars">
+                @foreach (var point in warehouse.History)
+                {
+                    <div class="stat-bar-column" title="@($"{point.Date:yyyy.MM.dd.}: {point.PackageCount} csomag ({point.UtilizationPercent:0.#}%)")">
+                        <div class="stat-bar" style="@($"height: {BarHeight(point.PackageCount, maxStored)}%; background: #4facfe;")"></div>
+                    </div>
+                }
+            </div>
+            <div class="stat-bar-labels">
+                @for (int i = 0; i < warehouse.History.Count; i++)
+                {
+                    <span>@(ShowLabel(i, warehouse.History.Count) ? warehouse.History[i].Date.ToString("MM.dd.") : "")</span>
+                }
+            </div>
+        </MudPaper>
+    }
+
+    <MudPaper Elevation="2" Class="pa-6 mb-4 rounded-lg">
+        <div class="d-flex flex-wrap align-center mb-4 gap-4">
+            <div class="d-flex align-center">
+                <MudIcon Icon="@Icons.Material.Filled.BarChart" Color="Color.Primary" Class="mr-2" />
+                <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">Csomagok száma naponta</MudText>
+            </div>
+            <MudSpacer />
+            <MudText Typo="Typo.caption"><span class="legend-dot" style="background: #9e9e9e;"></span>Feladva</MudText>
+            <MudText Typo="Typo.caption"><span class="legend-dot" style="background: #4facfe;"></span>Felvéve</MudText>
+            <MudText Typo="Typo.caption"><span class="legend-dot" style="background: #10b981;"></span>Kézbesítve</MudText>
+        </div>
+
+        @{
+            var maxDaily = Math.Max(1, statistics.DailyCounts.Count == 0 ? 1 : statistics.DailyCounts.Max(d => Math.Max(d.CreatedCount, Math.Max(d.PickedUpCount, d.DeliveredCount))));
+        }
+        <div class="stat-bars">
+            @foreach (var day in statistics.DailyCounts)
+            {
+                <div class="stat-bar-column" title="@($"{day.Date:yyyy.MM.dd.} – feladva: {day.CreatedCount}, felvéve: {day.PickedUpCount}, kézbesítve: {day.DeliveredCount}")">
+                    <div class="stat-bar" style="@($"height: {BarHeight(day.CreatedCount, maxDaily)}%; background: #9e9e9e;")"></div>
+                    <div class="stat-bar" style="@($"height: {BarHeight(day.PickedUpCount, maxDaily)}%; background: #4facfe;")"></div>
+                    <div class="stat-bar" style="@($"height: {BarHeight(day.DeliveredCount, maxDaily)}%; background: #10b981;")"></div>
+                </div>
+            }
+        </div>
+        <div class="stat-bar-labels">
+            @for (int i = 0; i < statistics.DailyCounts.Count; i++)
+            {
+                <span>@(ShowLabel(i, statistics.DailyCounts.Count) ? statistics.DailyCounts[i].Date.ToString("MM.dd.") : "")</span>
+            }
+        </div>
+    </MudPaper>
+
+    <MudPaper Elevation="2" Class="pa-6 rounded-lg">
+        <div class="d-flex align-center mb-4">
+            <MudIcon Icon="@Icons.Material.Filled.DeliveryDining" Color="Color.Primary" Class="mr-2" />
+            <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">Futárok teljesítménye az időszakban</MudText>
+        </div>
+
+        <MudSimpleTable Dense="true" Hover="true" Elevation="0">
+            <thead>
+                <tr>
+                    <th>Futár</th>
+                    <th>Rendszám</th>
+                    <th style="text-align: right;">Felvett</th>
+                    <th style="text-align: right;">Kézbesített</th>
+                    <th style="text-align: right;">Csomag / nap</th>
+                    <th style="text-align: right;">Átl. kiszállítási idő</th>
+                    <th style="text-align: right;">Aktív feladat</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!statistics.Couriers.Any())
+                {
+                    <tr><td colspan="7" class="mud-text-secondary">Nincsenek futárok a rendszerben.</td></tr>
+                }
+                @foreach (var courier in statistics.Couriers.OrderByDescending(c => c.PickupCount + c.DeliveredCount))
+                {
+                    <tr>
+                        <td style="font-weight: 600;">@courier.FullName</td>
+                        <td>@courier.VehiclePlateNumber</td>
+                        <td style="text-align: right;">@courier.PickupCount</td>
+                        <td style="text-align: right;">@courier.DeliveredCount</td>
+                        <td style="text-align: right;">@courier.AveragePackagesPerDay.ToString("0.##")</td>
+                        <td style="text-align: right;">@FormatHours(courier.AverageDeliveryTimeHours)</td>
+                        <td style="text-align: right;">@courier.ActiveAssignmentCount</td>
+                    </tr>
+                }
+            </tbody>
+        </MudSimpleTable>
+    </MudPaper>
+}
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] IAdminService AdminService { get; set; } = default!;
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
+
+    private DateTime? startDate = DateTime.Today.AddDays(-29);
+    private DateTime? endDate = DateTime.Today;
+
+    private AdminStatisticsResult? statistics;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStatistics();
+    }
+
+    private async Task LoadStatistics()
+    {
+        if (startDate == null || endDate == null)
+        {
+            Snackbar.Add("Add meg az időszak kezdő és záró napját!", Severity.Warning);
+            return;
+        }
+
+        if (startDate > endDate)
+        {
+            Snackbar.Add("A kezdő nap nem lehet későbbi a záró napnál!", Severity.Warning);
+            return;
+        }
+
+        if ((endDate.Value - startDate.Value).TotalDays > 366)
+        {
+            Snackbar.Add("Legfeljebb egy éves időszak kérdezhető le!", Severity.Warning);
+            return;
+        }
+
+        isLoading = true;
+
+        statistics = await AdminService.GetStatisticsAsync(startDate.Value, endDate.Value);
+
+        isLoading = false;
+    }
+
+    private async Task SetPreset(int days)
+    {
+        endDate = DateTime.Today;
+        startDate = DateTime.Today.AddDays(-(days - 1));
+        await LoadStatistics();
+    }
+
+    private IEnumerable<(string Label, string Value, string Icon, Color Color)> GetKpis()
+    {
+        if (statistics == null)
+            yield break;
+
+        yield return ("Összes csomag", statistics.TotalPackageCount.ToString(), Icons.Material.Filled.Inventory2, Color.Default);
+        yield return ("Aktív csomag", statistics.ActivePackageCount.ToString(), Icons.Material.Filled.Autorenew, Color.Info);
+        yield return ("Kézbesítve (időszak)", statistics.DeliveredInPeriodCount.ToString(), Icons.Material.Filled.TaskAlt, Color.Success);
+        yield return ("Átl. kiszállítási idő", FormatHours(statistics.AverageDeliveryTimeHours), Icons.Material.Filled.Timer, Color.Warning);
+        yield return ("Átl. teljes átfutás", FormatHours(statistics.AverageTotalTransitTimeHours), Icons.Material.Filled.Route, Color.Primary);
+    }
+
+    private static string FormatHours(double? hours)
+    {
+        if (hours == null)
+            return "–";
+
+        if (hours < 24)
+            return $"{hours:0.#} óra";
+
+        return $"{hours / 24:0.#} nap";
+    }
+
+    private static string BarHeight(int value, int max)
+        => (value <= 0 ? 0 : Math.Max(2, Math.Round(value * 100.0 / max, 1)))
+            .ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    private static bool ShowLabel(int index, int count)
+    {
+        var step = Math.Max(1, (int)Math.Ceiling(count / 10.0));
+        return index % step == 0 || index == count - 1;
+    }
+
+    private static Color GetUtilizationColor(double percent) => percent switch
+    {
+        >= 90 => Color.Error,
+        >= 70 => Color.Warning,
+        _ => Color.Success
+    };
+
+    private void GoBack() => NavigationManager.NavigateTo("/admin");
+}

@@ -1,0 +1,288 @@
+@page "/admin/users/create"
+@page "/admin/users/{UserId:int}"
+
+<PageTitle>@(IsCreateMode ? "Új munkatárs" : "Felhasználó szerkesztése")</PageTitle>
+
+<MudPaper Elevation="2" Class="pa-4 mb-4 rounded-lg d-flex align-center">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   Class="mr-4"
+                   OnClick="GoBack" />
+    <div>
+        <MudText Typo="Typo.h5" Style="font-weight: 700;">
+            @(IsCreateMode ? "Új munkatárs felvétele" : "Felhasználó szerkesztése")
+        </MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">
+            @(IsCreateMode
+                ? "Futár, raktáros vagy adminisztrátor fiók létrehozása. Az ügyfelek maguk regisztrálnak."
+                : "A felhasználó alapadatainak módosítása.")
+        </MudText>
+    </div>
+</MudPaper>
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="mx-auto d-block my-8" />
+}
+else if (IsCreateMode)
+{
+    <MudPaper Elevation="2" Class="pa-6 rounded-lg" Style="max-width: 800px;">
+        <EditForm Model="createRequest" OnValidSubmit="CreateUser">
+            <DataAnnotationsValidator />
+
+            <MudGrid Spacing="3">
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="string"
+                               Label="Szerepkör"
+                               @bind-Value="createRequest.Role"
+                               For="@(() => createRequest.Role)"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        <MudSelectItem T="string" Value="@UserRoles.Courier">Futár</MudSelectItem>
+                        <MudSelectItem T="string" Value="@UserRoles.WarehouseManager">Raktáros</MudSelectItem>
+                        <MudSelectItem T="string" Value="@UserRoles.Admin">Adminisztrátor</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    @if (createRequest.Role == UserRoles.Courier)
+                    {
+                        <MudTextField Label="Jármű rendszáma" @bind-Value="createRequest.VehiclePlateNumber" For="@(() => createRequest.VehiclePlateNumber)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    }
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Teljes név" @bind-Value="createRequest.FullName" For="@(() => createRequest.FullName)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Telefonszám" @bind-Value="createRequest.PhoneNumber" For="@(() => createRequest.PhoneNumber)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="E-mail cím (bejelentkezéshez)" @bind-Value="createRequest.Email" For="@(() => createRequest.Email)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Kezdeti jelszó" @bind-Value="createRequest.Password" For="@(() => createRequest.Password)" InputType="InputType.Password" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudItem>
+            </MudGrid>
+
+            <div class="d-flex justify-end gap-3 mt-6">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="GoBack" Disabled="isSaving">Mégse</MudButton>
+                <MudButton ButtonType="ButtonType.Submit"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.PersonAdd"
+                           Disabled="isSaving">
+                    @(isSaving ? "Létrehozás..." : "Létrehozás")
+                </MudButton>
+            </div>
+        </EditForm>
+    </MudPaper>
+}
+else if (user == null)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="rounded-lg">
+        A felhasználó nem található.
+    </MudAlert>
+}
+else
+{
+    <MudPaper Elevation="2" Class="pa-6 rounded-lg" Style="max-width: 800px;">
+        <div class="d-flex align-center mb-6">
+            <MudAvatar Color="Color.Primary" Variant="Variant.Outlined" Class="mr-3">
+                <MudIcon Icon="@Icons.Material.Filled.Person" />
+            </MudAvatar>
+            <div>
+                <MudText Typo="Typo.h6" Style="font-weight: 700;">@user.FullName</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    @GetRoleDisplayName(user.Role) • regisztrált: @user.CreatedAt.ToLocalTime().ToString("yyyy.MM.dd.")
+                </MudText>
+            </div>
+        </div>
+
+        <EditForm Model="updateRequest" OnValidSubmit="UpdateUser">
+            <DataAnnotationsValidator />
+
+            <MudGrid Spacing="3">
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Teljes név" @bind-Value="updateRequest.FullName" For="@(() => updateRequest.FullName)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Telefonszám" @bind-Value="updateRequest.PhoneNumber" For="@(() => updateRequest.PhoneNumber)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="E-mail cím" @bind-Value="updateRequest.Email" For="@(() => updateRequest.Email)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudItem>
+                @if (user.Role == UserRoles.Courier)
+                {
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="Jármű rendszáma" @bind-Value="updateRequest.VehiclePlateNumber" For="@(() => updateRequest.VehiclePlateNumber)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    </MudItem>
+                }
+            </MudGrid>
+
+            <div class="d-flex justify-space-between align-center gap-3 mt-6">
+                @if (confirmDelete)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" OnClick="DeleteUser" Disabled="isSaving">
+                        Biztosan törlöd?
+                    </MudButton>
+                }
+                else
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="@(() => confirmDelete = true)" Disabled="isSaving">
+                        Felhasználó törlése
+                    </MudButton>
+                }
+
+                <div class="d-flex gap-3">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="GoBack" Disabled="isSaving">Mégse</MudButton>
+                    <MudButton ButtonType="ButtonType.Submit"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Save"
+                               Disabled="isSaving">
+                        @(isSaving ? "Mentés folyamatban..." : "Módosítások mentése")
+                    </MudButton>
+                </div>
+            </div>
+        </EditForm>
+    </MudPaper>
+}
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] IAdminService AdminService { get; set; } = default!;
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
+
+    [Parameter]
+    public int? UserId { get; set; }
+
+    private bool IsCreateMode => UserId == null;
+
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private bool confirmDelete = false;
+
+    private AdminUserResult? user;
+    private UpdateUserRequest updateRequest = new();
+    private CreateStaffUserRequest createRequest = new() { Role = UserRoles.Courier };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        confirmDelete = false;
+
+        if (!IsCreateMode)
+        {
+            user = await AdminService.GetUserAsync(UserId!.Value);
+
+            if (user != null)
+            {
+                updateRequest = new UpdateUserRequest
+                {
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    VehiclePlateNumber = user.VehiclePlateNumber
+                };
+            }
+        }
+
+        isLoading = false;
+    }
+
+    private async Task CreateUser()
+    {
+        if (createRequest.Role == UserRoles.Courier && string.IsNullOrWhiteSpace(createRequest.VehiclePlateNumber))
+        {
+            Snackbar.Add("Futár esetén a rendszám megadása kötelező!", Severity.Warning);
+            return;
+        }
+
+        isSaving = true;
+
+        try
+        {
+            var success = await AdminService.CreateStaffUserAsync(createRequest);
+
+            if (success)
+            {
+                Snackbar.Add($"{createRequest.FullName} fiókja sikeresen létrehozva.", Severity.Success);
+                NavigationManager.NavigateTo("/admin/users");
+            }
+            else
+            {
+                Snackbar.Add("A létrehozás sikertelen! Lehet, hogy az e-mail cím már foglalt.", Severity.Error);
+            }
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task UpdateUser()
+    {
+        if (user == null) return;
+
+        isSaving = true;
+
+        try
+        {
+            var success = await AdminService.UpdateUserAsync(user.Id, updateRequest);
+
+            if (success)
+            {
+                Snackbar.Add("A felhasználó adatai sikeresen frissítve.", Severity.Success);
+                user.FullName = updateRequest.FullName;
+                user.Email = updateRequest.Email;
+            }
+            else
+            {
+                Snackbar.Add("A mentés sikertelen! Lehet, hogy az e-mail cím már foglalt.", Severity.Error);
+            }
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task DeleteUser()
+    {
+        if (user == null) return;
+
+        isSaving = true;
+
+        try
+        {
+            var success = await AdminService.DeleteUserAsync(user.Id);
+
+            if (success)
+            {
+                Snackbar.Add($"{user.FullName} törölve.", Severity.Success);
+                NavigationManager.NavigateTo("/admin/users");
+            }
+            else
+            {
+                Snackbar.Add("A törlés sikertelen! Saját magadat nem törölheted, és az aktív csomaggal rendelkező futár csomagjait előbb át kell rendelni.", Severity.Error);
+                confirmDelete = false;
+            }
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private static string GetRoleDisplayName(string role) => role switch
+    {
+        UserRoles.Customer => "Ügyfél",
+        UserRoles.Courier => "Futár",
+        UserRoles.WarehouseManager => "Raktáros",
+        UserRoles.Admin => "Adminisztrátor",
+        _ => "Ismeretlen"
+    };
+
+    private void GoBack() => NavigationManager.NavigateTo("/admin/users");
+}
