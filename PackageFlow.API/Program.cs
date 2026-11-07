@@ -10,6 +10,7 @@ using PackageFlow.API.Services.Courier;
 using PackageFlow.API.Services.PackageHandler;
 using PackageFlow.API.Services.PackageLabelGenerator;
 using PackageFlow.API.Services.WarehouseManager;
+using PackageFlow.API.Services.Admin;
 using QuestPDF.Infrastructure;
 using Serilog;
 using Serilog.Formatting.Compact;
@@ -87,6 +88,7 @@ builder.Services.AddScoped<IPackageHandlerService, PackageHandlerService>();
 builder.Services.AddScoped<ICourierService, CourierService>();
 builder.Services.AddScoped<IWarehouseManagerService, WarehouseManagerService>();
 builder.Services.AddScoped<IPackageLabelGeneratorService, PackageLabelGeneratorService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 
 builder.Services.AddAuthorization();
 

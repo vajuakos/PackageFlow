@@ -1,0 +1,74 @@
+@page "/admin"
+
+<style>
+    .admin-card {
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        cursor: pointer;
+        height: 100%;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .admin-card:hover {
+        transform: translateY(-8px);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(0, 229, 255, 0.3);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 229, 255, 0.1);
+    }
+</style>
+
+<PageTitle>Adminisztráció</PageTitle>
+
+<MudPaper Elevation="2" Class="pa-4 mb-6 rounded-lg d-flex align-center">
+    <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Color="Color.Primary" Size="Size.Large" Class="mr-4" />
+    <div>
+        <MudText Typo="Typo.h5" Style="font-weight: 700;">Adminisztrációs felület</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Csomagok, felhasználók és statisztikák kezelése egy helyen.</MudText>
+    </div>
+</MudPaper>
+
+<MudGrid Spacing="6">
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Elevation="4" Class="pa-6 rounded-xl admin-card" @onclick="@(() => NavigationManager.NavigateTo("/admin/packages"))">
+            <MudAvatar Style="width: 70px; height: 70px; background: rgba(33, 150, 243, 0.15); border: 1px solid rgba(33, 150, 243, 0.3);" Class="mb-6">
+                <MudIcon Icon="@Icons.Material.Filled.Inventory2" Style="font-size: 2.5rem; color: #4facfe;" />
+            </MudAvatar>
+            <MudText Typo="Typo.h5" Style="font-weight: 700; color: #ffffff;" Class="mb-2">Csomagok</MudText>
+            <MudText Typo="Typo.body2" Style="color: rgba(255,255,255,0.5); line-height: 1.5;" Class="mt-auto">
+                Az összes csomag megtekintése, módosítása, törlése és a futár-hozzárendelések átírása.
+            </MudText>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Elevation="4" Class="pa-6 rounded-xl admin-card" @onclick="@(() => NavigationManager.NavigateTo("/admin/users"))">
+            <MudAvatar Style="width: 70px; height: 70px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3);" Class="mb-6">
+                <MudIcon Icon="@Icons.Material.Filled.People" Style="font-size: 2.5rem; color: #10b981;" />
+            </MudAvatar>
+            <MudText Typo="Typo.h5" Style="font-weight: 700; color: #ffffff;" Class="mb-2">Felhasználók</MudText>
+            <MudText Typo="Typo.body2" Style="color: rgba(255,255,255,0.5); line-height: 1.5;" Class="mt-auto">
+                Futárok, raktárosok és regisztrált ügyfelek adatainak kezelése, új munkatárs felvétele.
+            </MudText>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Elevation="4" Class="pa-6 rounded-xl admin-card" @onclick="@(() => NavigationManager.NavigateTo("/admin/statistics"))">
+            <MudAvatar Style="width: 70px; height: 70px; background: rgba(255, 152, 0, 0.15); border: 1px solid rgba(255, 152, 0, 0.3);" Class="mb-6">
+                <MudIcon Icon="@Icons.Material.Filled.Insights" Style="font-size: 2.5rem; color: #ff9800;" />
+            </MudAvatar>
+            <MudText Typo="Typo.h5" Style="font-weight: 700; color: #ffffff;" Class="mb-2">Statisztikák</MudText>
+            <MudText Typo="Typo.body2" Style="color: rgba(255,255,255,0.5); line-height: 1.5;" Class="mt-auto">
+                Raktárkihasználtság, napi csomagszámok és a futárok teljesítménye.
+            </MudText>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+}

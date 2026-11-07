@@ -1,0 +1,209 @@
+@page "/admin/packages"
+
+<PageTitle>Csomagok kezelése</PageTitle>
+
+<MudPaper Elevation="2" Class="pa-4 mb-4 rounded-lg d-flex align-center">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   Class="mr-4"
+                   OnClick="GoBack" />
+    <div>
+        <MudText Typo="Typo.h5" Style="font-weight: 700;">Csomagok kezelése</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">A rendszerben lévő összes csomag. Kattints egy sorra a szerkesztéshez.</MudText>
+    </div>
+</MudPaper>
+
+<MudPaper Elevation="1" Class="pa-3 mb-4 rounded-lg">
+    <MudGrid Spacing="3" Class="align-center">
+        <MudItem xs="12" md="6">
+            <MudTextField @bind-Value="searchText"
+                          Placeholder="Keresés azonosító, feladó, címzett vagy futár alapján"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          Clearable="true" />
+        </MudItem>
+        <MudItem xs="12" sm="8" md="4">
+            <MudSelect T="PackageStatus?"
+                       @bind-Value="statusFilter"
+                       Label="Státusz szűrő"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Clearable="true">
+                @foreach (var status in Enum.GetValues<PackageStatus>())
+                {
+                    <MudSelectItem T="PackageStatus?" Value="@((PackageStatus?)status)">@status.ToDisplayName()</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="4" md="2" Class="d-flex justify-end">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       OnClick="LoadPackages"
+                       Disabled="isLoading">
+                Frissítés
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="mx-auto d-block my-8" />
+}
+else
+{
+    <MudTable Items="@packages"
+              Filter="new Func<AdminPackageResult, bool>(FilterPackage)"
+              Hover="true"
+              Dense="true"
+              Elevation="1"
+              Class="rounded-lg"
+              RowsPerPage="15"
+              OnRowClick="@((TableRowClickEventArgs<AdminPackageResult> args) => OpenPackage(args.Item!.TrackingNumber))"
+              RowStyle="cursor: pointer;">
+        <HeaderContent>
+            <MudTh>Azonosító</MudTh>
+            <MudTh>Státusz</MudTh>
+            <MudTh>Feladó</MudTh>
+            <MudTh>Címzett</MudTh>
+            <MudTh>Felvételi futár</MudTh>
+            <MudTh>Kiszállító futár</MudTh>
+            <MudTh>Tervezett felvétel</MudTh>
+            <MudTh Style="text-align: right;">Műveletek</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Azonosító">
+                <MudText Typo="Typo.body2" Style="font-weight: 700;">@context.TrackingNumber</MudText>
+            </MudTd>
+            <MudTd DataLabel="Státusz">
+                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)" Variant="Variant.Outlined">
+                    @context.Status.ToDisplayName()
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Feladó">@context.SenderName</MudTd>
+            <MudTd DataLabel="Címzett">
+                @context.RecipientName
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@context.DeliveryAddress.PostalCode @context.DeliveryAddress.City</MudText>
+            </MudTd>
+            <MudTd DataLabel="Felvételi futár">@(context.PickupCourierName ?? "–")</MudTd>
+            <MudTd DataLabel="Kiszállító futár">@(context.DeliveryCourierName ?? "–")</MudTd>
+            <MudTd DataLabel="Tervezett felvétel">@context.ScheduledPickupDate.ToString("yyyy.MM.dd.")</MudTd>
+            <MudTd Style="text-align: right; white-space: nowrap;">
+                <div class="d-flex justify-end align-center gap-1" @onclick:stopPropagation="true">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   OnClick="@(() => OpenPackage(context.TrackingNumber))" />
+
+                    @if (pendingDeleteTrackingNumber == context.TrackingNumber)
+                    {
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Error"
+                                   Size="Size.Small"
+                                   OnClick="@(() => DeletePackage(context.TrackingNumber))">
+                            Biztosan törlöd?
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       Color="Color.Error"
+                                       Size="Size.Small"
+                                       OnClick="@(() => pendingDeleteTrackingNumber = context.TrackingNumber)" />
+                    }
+                </div>
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="pa-6">Nincsenek megjeleníthető csomagok!</MudText>
+        </NoRecordsContent>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+}
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] IAdminService AdminService { get; set; } = default!;
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
+
+    private List<AdminPackageResult> packages = new();
+    private bool isLoading = true;
+
+    private string searchText = string.Empty;
+    private PackageStatus? statusFilter;
+    private string? pendingDeleteTrackingNumber;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPackages();
+    }
+
+    private async Task LoadPackages()
+    {
+        isLoading = true;
+        pendingDeleteTrackingNumber = null;
+
+        packages = await AdminService.GetPackagesAsync();
+
+        isLoading = false;
+    }
+
+    private bool FilterPackage(AdminPackageResult package)
+    {
+        if (statusFilter.HasValue && package.Status != statusFilter.Value)
+            return false;
+
+        if (string.IsNullOrWhiteSpace(searchText))
+            return true;
+
+        var search = searchText.Trim();
+
+        return Contains(package.TrackingNumber, search)
+            || Contains(package.SenderName, search)
+            || Contains(package.RecipientName, search)
+            || Contains(package.PickupCourierName, search)
+            || Contains(package.DeliveryCourierName, search)
+            || Contains(package.DeliveryAddress.City, search);
+    }
+
+    private static bool Contains(string? value, string search)
+        => value?.Contains(search, StringComparison.OrdinalIgnoreCase) == true;
+
+    private async Task DeletePackage(string trackingNumber)
+    {
+        var success = await AdminService.DeletePackageAsync(trackingNumber);
+
+        if (success)
+        {
+            packages.RemoveAll(p => p.TrackingNumber == trackingNumber);
+            Snackbar.Add($"A(z) {trackingNumber} csomag törölve.", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("A csomag törlése sikertelen!", Severity.Error);
+        }
+
+        pendingDeleteTrackingNumber = null;
+    }
+
+    private static Color GetStatusColor(PackageStatus status) => status switch
+    {
+        PackageStatus.Registered or PackageStatus.Modified => Color.Default,
+        PackageStatus.PickupAssigned or PackageStatus.DeliveryAssigned => Color.Info,
+        PackageStatus.PickedUp or PackageStatus.InWarehouse => Color.Primary,
+        PackageStatus.OutForDelivery => Color.Warning,
+        PackageStatus.Delivered => Color.Success,
+        PackageStatus.Failed or PackageStatus.Cancelled => Color.Error,
+        _ => Color.Default
+    };
+
+    private void OpenPackage(string trackingNumber) => NavigationManager.NavigateTo($"/admin/packages/{trackingNumber}");
+
+    private void GoBack() => NavigationManager.NavigateTo("/admin");
+}
