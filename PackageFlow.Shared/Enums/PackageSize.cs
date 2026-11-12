@@ -20,5 +20,15 @@
             PackageSize.ExtraLarge => "Extra nagy (XL) – max. 40 kg (nagyméretű küldemény)",
             _ => size.ToString()
         };
+
+        public static decimal GetMaxWeight(this PackageSize size) => size switch
+        {
+            PackageSize.ExtraSmall => 1.0m,
+            PackageSize.Small => 5.0m,
+            PackageSize.Medium => 15.0m,
+            PackageSize.Large => 25.0m,
+            PackageSize.ExtraLarge => 40.0m,
+            _ => 50.0m
+        };
     }
 }

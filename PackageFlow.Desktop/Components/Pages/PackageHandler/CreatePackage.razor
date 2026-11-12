@@ -248,7 +248,8 @@
             <MudGrid Spacing="3">
                 <MudItem xs="12" md="4">
                     <MudSelect T="PackageSize"
-                               @bind-Value="request.SizeCategory"
+                               Value="request.SizeCategory"
+                               ValueChanged="OnSizeCategoryChanged"
                                Label="Méretkategória"
                                Variant="Variant.Outlined"
                                For="@(() => request.SizeCategory)"
@@ -270,9 +271,10 @@
                                      Placeholder="pl. 2.50"
                                      Variant="Variant.Outlined"
                                      Min="0.1m"
-                                     Max="50.0m"
+                                     Max="@request.SizeCategory.GetMaxWeight()"
                                      Step="0.1m"
                                      Format="F2"
+                                     HelperText="@($"Max. {request.SizeCategory.GetMaxWeight():0.##} kg")"
                                      For="@(() => request.WeightKg)"
                                      Required="true"
                                      RequiredError="A mező kitöltése kötelező!" />
@@ -330,6 +332,17 @@
         else
         {
             Snackbar.Add("Nem sikerült rögzíteni a csomagot. Kérjük, ellenőrizd az adatokat.", Severity.Error);
+        }
+    }
+
+    private void OnSizeCategoryChanged(PackageSize newSize)
+    {
+        request.SizeCategory = newSize;
+        var maxWeight = newSize.GetMaxWeight();
+
+        if (request.WeightKg > maxWeight)
+        {
+            request.WeightKg = maxWeight;
         }
     }
 
