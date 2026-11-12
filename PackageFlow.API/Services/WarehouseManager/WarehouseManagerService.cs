@@ -229,5 +229,43 @@ namespace PackageFlow.API.Services.WarehouseManager
 
             return true;
         }
+        
+        public async Task<List<WarehousePackageResult>> GetWarehousePackagesAsync()
+        {
+            return await _dbContext.Packages
+                .AsNoTracking()
+                .Where(p =>
+                    p.Status == PackageStatus.PickupAssigned ||
+                    p.Status == PackageStatus.PickedUp ||
+                    p.Status == PackageStatus.InWarehouse ||
+                    p.Status == PackageStatus.DeliveryAssigned ||
+                    p.Status == PackageStatus.OutForDelivery)
+                .OrderByDescending(p => p.CreatedAt)
+                .Select(p => new WarehousePackageResult
+                {
+                    TrackingNumber = p.TrackingNumber,
+                    Status = p.Status,
+                    Size = p.Size,
+                    WeightKg = p.WeightKg,
+                    ScheduledPickupDate = p.ScheduledPickupDate,
+                    SenderName = p.SenderUser != null ? p.SenderUser.FullName : p.SenderName,
+                    RecipientName = p.RecipientUser != null ? p.RecipientUser.FullName : p.RecipientName,
+                    DeliveryAddress = new AddressResult
+                    {
+                        Country = p.DeliveryAddress.Country,
+                        State = p.DeliveryAddress.State,
+                        PostalCode = p.DeliveryAddress.PostalCode,
+                        City = p.DeliveryAddress.City,
+                        Street = p.DeliveryAddress.Street,
+                        StreetNumber = p.DeliveryAddress.StreetNumber,
+                        BuildingDetails = p.DeliveryAddress.BuildingDetails
+                    },
+                    PickupCourierId = p.PickupCourierId,
+                    PickupCourierName = p.PickupCourier != null ? p.PickupCourier.FullName : null,
+                    DeliveryCourierId = p.DeliveryCourierId,
+                    DeliveryCourierName = p.DeliveryCourier != null ? p.DeliveryCourier.FullName : null,
+                    ReceivedInWarehouseAt = p.ReceivedInWarehouseAt
+                }).ToListAsync();
+        }
     }
 }

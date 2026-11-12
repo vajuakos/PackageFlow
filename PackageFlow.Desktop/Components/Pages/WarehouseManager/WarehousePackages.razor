@@ -1,0 +1,204 @@
+@page "/warehouse/packages"
+
+<PageTitle>Raktárban tárolt csomagok</PageTitle>
+
+<MudPaper Elevation="2" Class="pa-4 mb-4 rounded-lg d-flex align-center">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   Class="mr-4"
+                   OnClick="GoBack" />
+    <div>
+        <MudText Typo="Typo.h5" Style="font-weight: 700;">Raktárban tárolt csomagok</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">A raktárban lévő és a futárokhoz rendelt összes csomag.</MudText>
+    </div>
+    <MudSpacer />
+    <MudButton Variant="Variant.Outlined"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Refresh"
+               OnClick="LoadPackages"
+               Disabled="isLoading">
+        Frissítés
+    </MudButton>
+</MudPaper>
+
+<MudGrid Spacing="3" Class="mb-4">
+    <MudItem xs="12" sm="4">
+        <MudPaper Elevation="2" Class="pa-4 rounded-lg d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Warehouse" Color="Color.Primary" Class="mr-3" />
+            <div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Raktárban</MudText>
+                <MudText Typo="Typo.h5" Style="font-weight: 700;">@InWarehouseCount</MudText>
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="4">
+        <MudPaper Elevation="2" Class="pa-4 rounded-lg d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Color="Color.Warning" Class="mr-3" />
+            <div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Futárnál</MudText>
+                <MudText Typo="Typo.h5" Style="font-weight: 700;">@AtCourierCount</MudText>
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="4">
+        <MudPaper Elevation="2" Class="pa-4 rounded-lg d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Inventory2" Color="Color.Default" Class="mr-3" />
+            <div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Összesen</MudText>
+                <MudText Typo="Typo.h5" Style="font-weight: 700;">@packages.Count</MudText>
+            </div>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+<MudPaper Elevation="1" Class="pa-3 mb-4 rounded-lg">
+    <MudGrid Spacing="3" Class="align-center">
+        <MudItem xs="12" md="7">
+            <MudTextField @bind-Value="searchText"
+                          Placeholder="Keresés azonosító, feladó, címzett, város vagy futár alapján"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          Clearable="true" />
+        </MudItem>
+        <MudItem xs="12" md="5">
+            <MudSelect T="string"
+                       @bind-Value="locationFilter"
+                       Label="Hol van a csomag?"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense">
+                <MudSelectItem T="string" Value="@AllFilter">Mind</MudSelectItem>
+                <MudSelectItem T="string" Value="@WarehouseFilter">Raktárban</MudSelectItem>
+                <MudSelectItem T="string" Value="@CourierFilter">Futárnál</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="mx-auto d-block my-8" />
+}
+else
+{
+    <MudTable Items="@packages"
+              Filter="new Func<WarehousePackageResult, bool>(FilterPackage)"
+              Hover="true"
+              Dense="true"
+              Elevation="1"
+              Class="rounded-lg"
+              RowsPerPage="15">
+        <HeaderContent>
+            <MudTh>Azonosító</MudTh>
+            <MudTh>Státusz</MudTh>
+            <MudTh>Feladó</MudTh>
+            <MudTh>Címzett</MudTh>
+            <MudTh>Méret / súly</MudTh>
+            <MudTh>Felvételi futár</MudTh>
+            <MudTh>Kiszállító futár</MudTh>
+            <MudTh>Raktárba érkezett</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Azonosító">
+                <MudText Typo="Typo.body2" Style="font-weight: 700;">@context.TrackingNumber</MudText>
+            </MudTd>
+            <MudTd DataLabel="Státusz">
+                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)" Variant="Variant.Outlined">
+                    @context.Status.ToDisplayName()
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Feladó">@context.SenderName</MudTd>
+            <MudTd DataLabel="Címzett">
+                @context.RecipientName
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    @context.DeliveryAddress.PostalCode @context.DeliveryAddress.City, @context.DeliveryAddress.Street @context.DeliveryAddress.StreetNumber
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Méret / súly">@context.Size.ToDisplayName() • @context.WeightKg kg</MudTd>
+            <MudTd DataLabel="Felvételi futár">@(context.PickupCourierName ?? "–")</MudTd>
+            <MudTd DataLabel="Kiszállító futár">@(context.DeliveryCourierName ?? "–")</MudTd>
+            <MudTd DataLabel="Raktárba érkezett">
+                @(context.ReceivedInWarehouseAt.HasValue
+                    ? context.ReceivedInWarehouseAt.Value.ToLocalTime().ToString("yyyy.MM.dd. HH:mm")
+                    : "–")
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="pa-6">Nincsenek megjeleníthető csomagok!</MudText>
+        </NoRecordsContent>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+}
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] IWarehouseManagerService WarehouseManagerService { get; set; } = default!;
+
+    private const string AllFilter = "all";
+    private const string WarehouseFilter = "warehouse";
+    private const string CourierFilter = "courier";
+
+    private List<WarehousePackageResult> packages = new();
+    private bool isLoading = true;
+
+    private string searchText = string.Empty;
+    private string locationFilter = AllFilter;
+
+    private int InWarehouseCount => packages.Count(p => IsInWarehouse(p.Status));
+    private int AtCourierCount => packages.Count(p => !IsInWarehouse(p.Status));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPackages();
+    }
+
+    private async Task LoadPackages()
+    {
+        isLoading = true;
+
+        packages = await WarehouseManagerService.GetWarehousePackagesAsync();
+
+        isLoading = false;
+    }
+
+    private bool FilterPackage(WarehousePackageResult package)
+    {
+        if (locationFilter == WarehouseFilter && !IsInWarehouse(package.Status))
+            return false;
+
+        if (locationFilter == CourierFilter && IsInWarehouse(package.Status))
+            return false;
+
+        if (string.IsNullOrWhiteSpace(searchText))
+            return true;
+
+        var search = searchText.Trim();
+
+        return Contains(package.TrackingNumber, search)
+            || Contains(package.SenderName, search)
+            || Contains(package.RecipientName, search)
+            || Contains(package.DeliveryAddress.City, search)
+            || Contains(package.PickupCourierName, search)
+            || Contains(package.DeliveryCourierName, search);
+    }
+
+    private static bool IsInWarehouse(PackageStatus status)
+        => status is PackageStatus.InWarehouse or PackageStatus.DeliveryAssigned;
+
+    private static bool Contains(string? value, string search)
+        => value?.Contains(search, StringComparison.OrdinalIgnoreCase) == true;
+
+    private static Color GetStatusColor(PackageStatus status) => status switch
+    {
+        PackageStatus.PickupAssigned or PackageStatus.DeliveryAssigned => Color.Info,
+        PackageStatus.PickedUp or PackageStatus.InWarehouse => Color.Primary,
+        PackageStatus.OutForDelivery => Color.Warning,
+        _ => Color.Default
+    };
+
+    private void GoBack() => NavigationManager.NavigateTo("/");
+}

@@ -132,5 +132,17 @@ namespace PackageFlow.API.Controllers
             return Ok("Delivery courier assigned successfully.");
         }
 
+        [HttpGet("packages")]
+        public async Task<ActionResult<List<WarehousePackageResult>>> GetWarehousePackages()
+        {
+            if (CurrentUserId == null)
+                return Unauthorized("Unauthorized access!");
+
+            var packages = await _warehouseManagerService
+                .GetWarehousePackagesAsync();
+
+            return Ok(packages);
+        }
+
     }
 }
