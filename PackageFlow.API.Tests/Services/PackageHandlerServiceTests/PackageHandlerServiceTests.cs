@@ -1,4 +1,5 @@
-﻿using PackageFlow.API.Models;
+﻿using Microsoft.Extensions.Logging.Abstractions;
+using PackageFlow.API.Models;
 using PackageFlow.API.Services.PackageHandler;
 using PackageFlow.Shared.DTOs.PackageHandler;
 using PackageFlow.Shared.Enums;
@@ -7,11 +8,14 @@ namespace PackageFlow.API.Tests.Services.PackageHandlerServiceTests
 {
     public class PackageHandlerServiceTests : ServiceTestBase
     {
-        private readonly PackageHandlerService _service;
+        // Dummy logger instance to fill the missing dependency
+        private readonly NullLogger<PackageHandlerService> _logger;
+        private readonly PackageHandlerService _packageHandlerService;
 
         public PackageHandlerServiceTests()
         {
-            _service = new PackageHandlerService(_context);
+            _logger = NullLogger<PackageHandlerService>.Instance;
+            _packageHandlerService = new PackageHandlerService(_context, _logger);
         }
 
         [Fact]
@@ -55,7 +59,7 @@ namespace PackageFlow.API.Tests.Services.PackageHandlerServiceTests
             };
 
             // Act
-            var result = await _service.CreatePackageAsync(request, _userId);
+            var result = await _packageHandlerService.CreatePackageAsync(request, _userId);
 
             // Assert
             Assert.True(result);
@@ -79,7 +83,7 @@ namespace PackageFlow.API.Tests.Services.PackageHandlerServiceTests
             await _context.SaveChangesAsync();
 
             // Act
-            var returnedPackage = await _service.GetPackageByTrackingNumberAsync(trackingNumber);
+            var returnedPackage = await _packageHandlerService.GetPackageByTrackingNumberAsync(trackingNumber);
 
             // Assert
             Assert.NotNull(returnedPackage);
@@ -95,7 +99,7 @@ namespace PackageFlow.API.Tests.Services.PackageHandlerServiceTests
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(() =>
-                _service.GetPackageByTrackingNumberAsync(trackingNumber));
+                _packageHandlerService.GetPackageByTrackingNumberAsync(trackingNumber));
 
             Assert.Contains("trackingNumber", exception.Message);
         }
