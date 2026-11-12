@@ -9,6 +9,7 @@ using PackageFlow.Desktop.Services.Authentication;
 using PackageFlow.Desktop.Services.PackageHandler;
 using PackageFlow.Desktop.Services.PackageLabelGenerator;
 using PackageFlow.Desktop.Services.Admin;
+using PackageFlow.Desktop.Services.WarehouseManager;
 using Serilog;
 
 namespace PackageFlow.Desktop
@@ -67,6 +68,8 @@ namespace PackageFlow.Desktop
             builder.Services.AddScoped<IPackageHandlerService, PackageHandlerService>();
             builder.Services.AddScoped<IPackageLableGeneratorService, PackageLableGeneratorService>();
             builder.Services.AddScoped<IAdminService, AdminService>();
+            builder.Services.AddScoped<IWarehouseManagerService, WarehouseManagerService>();
+
 
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
