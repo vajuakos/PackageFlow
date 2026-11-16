@@ -93,6 +93,62 @@ namespace PackageFlow.Desktop.Services.Courier
             }
         }
 
+        public async Task<bool> RecordDeliveryAsync(string trackingNumber)
+        {
+            if (string.IsNullOrWhiteSpace(trackingNumber))
+                throw new ArgumentException("Tracking number is required.", nameof(trackingNumber));
+
+            var cleanTracking = trackingNumber.Trim();
+            var url = $"{BaseUrl}/packages/{Uri.EscapeDataString(cleanTracking)}/deliver";
+
+            try
+            {
+                var response = await _httpClient.PostAsync(url, null);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("Package marked as delivered successfully. TrackingNumber: {TrackingNumber}", cleanTracking);
+                    return true;
+                }
+
+                _logger.LogWarning("Failed to mark package as delivered. TrackingNumber: {TrackingNumber}, StatusCode: {StatusCode}", cleanTracking, response.StatusCode);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Network or server error while marking delivered for tracking number: {TrackingNumber}", cleanTracking);
+                return false;
+            }
+        }
+
+        public async Task<bool> RecordFailedDeliveryAsync(string trackingNumber, string? note = null)
+        {
+            if (string.IsNullOrWhiteSpace(trackingNumber))
+                throw new ArgumentException("Tracking number is required.", nameof(trackingNumber));
+
+            var cleanTracking = trackingNumber.Trim();
+            var url = $"{BaseUrl}/packages/{Uri.EscapeDataString(cleanTracking)}/fail";
+
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync(url, note);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("Package marked as failed delivery successfully. TrackingNumber: {TrackingNumber}", cleanTracking);
+                    return true;
+                }
+
+                _logger.LogWarning("Failed to mark package as failed delivery. TrackingNumber: {TrackingNumber}, StatusCode: {StatusCode}", cleanTracking, response.StatusCode);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Network or server error while marking delivered for tracking number: {TrackingNumber}", cleanTracking);
+                return false;
+            }
+        }
+
         public async Task<List<CourierShippingHistoryResult>> GetShippingHistoryAsync(DateTime startDate, DateTime endDate)
         {
             if (startDate >= endDate)

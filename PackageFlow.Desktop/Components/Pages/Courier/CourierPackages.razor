@@ -122,6 +122,27 @@ else
                         Kiszállításra felvéve
                     </MudButton>
                  }
+                else if (context.Status == PackageStatus.OutForDelivery)
+                {
+                    <div class="d-flex justify-end gap-2">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Success"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.CheckCircle"
+                               Disabled="@(processingTrackingNumber == context.TrackingNumber)"
+                               OnClick="@(() => RecordDelivery(context.TrackingNumber))">
+                        Kézbesítve
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Error"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Cancel"
+                               Disabled="@(processingTrackingNumber == context.TrackingNumber)"
+                               OnClick="@(() => OpenFailDialog(context.TrackingNumber))">
+                        Sikertelen
+                    </MudButton>
+                    </div>
+                }
                  else
                  {
                      <MudText Typo="Typo.caption" Color="Color.Secondary">Nincs teendő</MudText>
@@ -137,6 +158,34 @@ else
     </MudTable>
 }
 
+<MudDialog @bind-Visible="isFailDialogOpen">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Color="Color.Error" Class="mr-2 mb-n1" />
+            Sikertelen kézbesítés rögzítése
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Azonosító: <strong>@failTrackingNumber</strong>
+        </MudText>
+        <MudTextField @bind-Value="failNote"
+                      Label="Indoklás / Megjegyzés (opcionális)"
+                      Placeholder="Pl. Címzett nem tartózkodott a címen"
+                      Variant="Variant.Outlined"
+                      Lines="3" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseFailDialog" Disabled="@(processingTrackingNumber != null)">Mégse</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Error"
+                   OnClick="ConfirmFailedDelivery"
+                   Disabled="@(processingTrackingNumber != null)">
+            Rögzítés
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     [Inject] NavigationManager NavigationManager { get; set; } = default!;
     [Inject] ICourierService CourierService { get; set; } = default!;
@@ -148,6 +197,10 @@ else
 
     private string searchText = string.Empty;
     private PackageStatus? statusFilter;
+
+    private bool isFailDialogOpen = false;
+    private string? failTrackingNumber;
+    private string? failNote;
 
     protected override async Task OnInitializedAsync()
     {
@@ -192,6 +245,62 @@ else
         else
         {
             Snackbar.Add("Nem sikerült kiszállításra felvenni a csomagot!", Severity.Error);
+        }
+
+        processingTrackingNumber = null;
+    }
+
+    private async Task RecordDelivery(string trackingNumber)
+    {
+        processingTrackingNumber = trackingNumber;
+        var success = await CourierService.RecordDeliveryAsync(trackingNumber);
+
+        if (success)
+        {
+            Snackbar.Add($"A(z) {trackingNumber} csomag sikeresen kézbesítve.", Severity.Success);
+            await LoadPackages();
+        }
+        else
+        {
+            Snackbar.Add("Nem sikerült rögzíteni a kézbesítést!", Severity.Error);
+        }
+
+        processingTrackingNumber = null;
+    }
+
+    private void OpenFailDialog(string trackingNumber)
+    {
+        failTrackingNumber = trackingNumber;
+        failNote = string.Empty;
+        isFailDialogOpen = true;
+    }
+
+    private void CloseFailDialog()
+    {
+        isFailDialogOpen = false;
+        failTrackingNumber = null;
+        failNote = string.Empty;
+    }
+
+    private async Task ConfirmFailedDelivery()
+    {
+        if (string.IsNullOrWhiteSpace(failTrackingNumber))
+            return;
+
+        var trackingNumber = failTrackingNumber;
+        processingTrackingNumber = trackingNumber;
+
+        var success = await CourierService.RecordFailedDeliveryAsync(trackingNumber, failNote);
+
+        if (success)
+        {
+            Snackbar.Add($"A(z) {trackingNumber} csomag kézbesítése sikertelenként rögzítve.", Severity.Warning);
+            CloseFailDialog();
+            await LoadPackages();
+        }
+        else
+        {
+            Snackbar.Add("Nem sikerült rögzíteni a sikertelen kézbesítést!", Severity.Error);
         }
 
         processingTrackingNumber = null;
