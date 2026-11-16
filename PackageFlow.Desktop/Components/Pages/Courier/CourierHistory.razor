@@ -1,0 +1,162 @@
+﻿@page "/courier/history"
+
+<PageTitle>Szállítási előzmények</PageTitle>
+
+<MudPaper Elevation="2" Class="pa-4 mb-4 rounded-lg d-flex align-center">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   Class="mr-4"
+                   OnClick="GoBack" />
+    <div>
+        <MudText Typo="Typo.h5" Style="font-weight: 700;">Szállítási előzmények</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">A megadott időszakban általad rögzített státuszváltozások.</MudText>
+    </div>
+</MudPaper>
+
+<MudPaper Elevation="1" Class="pa-3 mb-4 rounded-lg">
+    <MudGrid Spacing="3" Class="align-center">
+        <MudItem xs="12" sm="4" md="3">
+            <MudDatePicker Label="Kezdő dátum"
+                @bind-Date="startDate"
+                Variant="Variant.Outlined"
+                Margin="Margin.Dense"
+                DateFormat="yyyy.MM.dd." />
+        </MudItem>
+        <MudItem xs="12" sm="4" md="3">
+            <MudDatePicker Label="Záró dátum"
+                @bind-Date="endDate"
+                Variant="Variant.Outlined"
+                Margin="Margin.Dense"
+                DateFormat="yyyy.MM.dd." />
+        </MudItem>
+        <MudItem xs="12" sm="4" md="4">
+            <MudTextField @bind-Value="searchText"
+                Placeholder="Keresés azonosító vagy megjegyzés alapján"
+                Variant="Variant.Outlined"
+                Margin="Margin.Dense"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Search"
+                Immediate="true"
+                Clearable="true" />
+        </MudItem>
+        <MudItem xs="12" md="2" Class="d-flex justify-end">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="LoadHistory"
+                       Disabled="isLoading">
+                Lekérdezés
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="mx-auto d-block my-8" />
+}
+else
+{
+    <MudTable Items="@historyItems"
+              Filter="new Func<CourierShippingHistoryResult, bool>(FilterHistory)"
+              Hover="true"
+              Dense="true"
+              Elevation="1"
+              Class="rounded-lg"
+              RowsPerPage="15">
+        <HeaderContent>
+            <MudTh>Időpont</MudTh>
+            <MudTh>Azonosító</MudTh>
+            <MudTh>Rögzített státusz</MudTh>
+            <MudTh>Megjegyzés</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Időpont">
+                @context.Timestamp.ToLocalTime().ToString("yyyy.MM.dd. HH:mm")
+            </MudTd>
+            <MudTd DataLabel="Azonosító">
+                <MudText Typo="Typo.body2" Style="font-weight: 700;">
+                    @context.TrackingNumber
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Rögzített státusz">
+                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)" Variant="Variant.Outlined">
+                    @context.Status.ToDisplayName()
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Megjegyzés">
+                @(context.Note ?? "-")
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="pa-6">Nincs rögzített előzmény a kiválasztott időszakban!</MudText>
+        </NoRecordsContent>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+}
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] ICourierService CourierService { get; set; } = default!;
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
+
+    private List<CourierShippingHistoryResult> historyItems = new();
+    private bool isLoading = true;
+
+    private DateTime? startDate = DateTime.Today.AddDays(-30);
+    private DateTime? endDate = DateTime.Today;
+    private string searchText = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadHistory();
+    }
+
+    private async Task LoadHistory()
+    {
+        if (!startDate.HasValue || !endDate.HasValue)
+        {
+            Snackbar.Add("Kérlek add meg a kezdő és a záró dátumot is!", Severity.Warning);
+            return;
+        }
+
+        if (startDate.Value.Date > endDate.Value.Date)
+        {
+            Snackbar.Add("A kezdő dátum nem lehet későbbi a záró dátumnál!", Severity.Warning);
+            return;
+        }
+
+        isLoading = true;
+
+        var queryStart = DateTime.SpecifyKind(startDate.Value.Date, DateTimeKind.Utc);
+        var queryEnd = DateTime.SpecifyKind(endDate.Value.Date.AddDays(1), DateTimeKind.Utc);
+
+        historyItems = await CourierService.GetShippingHistoryAsync(queryStart, queryEnd);
+
+        isLoading = false;
+    }
+
+    private bool FilterHistory(CourierShippingHistoryResult item)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+            return true;
+
+        var search = searchText.Trim();
+
+        return (item.TrackingNumber?.Contains(search, StringComparison.OrdinalIgnoreCase) == true)
+            || (item.Note?.Contains(search, StringComparison.OrdinalIgnoreCase) == true);
+    }
+
+    private static Color GetStatusColor(PackageStatus status) => status switch
+    {
+        PackageStatus.PickedUp => Color.Primary,
+        PackageStatus.OutForDelivery => Color.Warning,
+        PackageStatus.Delivered => Color.Success,
+        PackageStatus.Failed or PackageStatus.Cancelled => Color.Error,
+        _ => Color.Info
+    };
+
+    private void GoBack() => NavigationManager.NavigateTo("/courier");
+}
