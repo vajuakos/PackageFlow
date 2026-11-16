@@ -11,6 +11,7 @@ using PackageFlow.Desktop.Services.PackageLabelGenerator;
 using PackageFlow.Desktop.Services.Admin;
 using PackageFlow.Desktop.Services.WarehouseManager;
 using Serilog;
+using PackageFlow.Desktop.Services.Courier;
 
 namespace PackageFlow.Desktop
 {
@@ -69,6 +70,7 @@ namespace PackageFlow.Desktop
             builder.Services.AddScoped<IPackageLableGeneratorService, PackageLableGeneratorService>();
             builder.Services.AddScoped<IAdminService, AdminService>();
             builder.Services.AddScoped<IWarehouseManagerService, WarehouseManagerService>();
+            builder.Services.AddScoped<ICourierService, CourierService>();
 
 
 #if DEBUG
