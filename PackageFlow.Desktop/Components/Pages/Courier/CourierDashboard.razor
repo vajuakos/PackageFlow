@@ -1,0 +1,62 @@
+﻿@page "/courier"
+
+<style>
+    .courier-card {
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        cursor: pointer;
+        height: 100%;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .courier-card:hover {
+        transform: translateY(-8px);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(0, 229, 255, 0.3);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 229, 255, 0.1);
+    }
+</style>
+
+<PageTitle>Futár felület</PageTitle>
+
+<MudPaper Elevation="2" Class="pa-4 mb-6 rounded-lg d-flex align-center">
+    <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Color="Color.Primary" Size="Size.Large" Class="mr-4" />
+    <div>
+        <MudText Typo="Typo.h5" Style="font-weight: 700;">Futár felület</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Hozzád rendelt csomagok kezelése és szállítási előzmények megtekintése.</MudText>
+    </div>
+</MudPaper>
+
+<MudGrid Spacing="6">
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Elevation="4" Class="pa-6 rounded-xl courier-card" @onclick="@(() => NavigationManager.NavigateTo("/courier/packages"))">
+            <MudAvatar Style="width: 70px; height: 70px; background: rgba(33, 150, 243, 0.15); border: 1px solid rgba(33, 150, 243, 0.3);" Class="mb-6">
+                <MudIcon Icon="@Icons.Material.Filled.Inventory2" Style="font-size: 2.5rem; color: #4facfe;" />
+            </MudAvatar>
+            <MudText Typo="Typo.h5" Style="font-weight: 700; color: #ffffff;" Class="mb-2">Hozzám rendelt csomagok</MudText>
+            <MudText Typo="Typo.body2" Style="color: rgba(255,255,255,0.5); line-height: 1.5;" Class="mt-auto">
+                Aktuális felvételi és kiszállítási feladatok megtekintése, csomagfelvétel és kiszállítás indításának rögzítése.
+            </MudText>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Elevation="4" Class="pa-6 rounded-xl courier-card" @onclick="@(() => NavigationManager.NavigateTo("/courier/history"))">
+            <MudAvatar Style="width: 70px; height: 70px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3);" Class="mb-6">
+                <MudIcon Icon="@Icons.Material.Filled.History" Style="font-size: 2.5rem; color: #10b981;" />
+            </MudAvatar>
+            <MudText Typo="Typo.h5" Style="font-weight: 700; color: #ffffff;" Class="mb-2">Szállítási előzmények</MudText>
+            <MudText Typo="Typo.body2" Style="color: rgba(255,255,255,0.5); line-height: 1.5;" Class="mt-auto">
+                Korábban rögzített csomagfelvételek és kiszállítások visszakeresése dátum szerint.
+            </MudText>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+}
