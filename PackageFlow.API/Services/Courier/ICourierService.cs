@@ -11,6 +11,10 @@ namespace PackageFlow.API.Services.Courier
 
         Task<bool> RecordOutForDeliveryAsync(string trackingNumber, int courierId);
 
+        Task<bool> RecordDeliveryAsync(string trackingNumber, int courierId);
+
+        Task<bool> RecordFailedDeliveryAsync(string trackingNumber, int courierId, string? note=null);
+
         Task<List<CourierShippingHistoryResult>> GetShippingHistoryAsync(int courierId, DateTime startDate, DateTime endDate);
     }
 }
