@@ -136,7 +136,7 @@ namespace PackageFlow.API.Services.Courier
                 Status = Shared.Enums.PackageStatus.PickedUp,
                 Timestamp = now,
                 ChangedByUserId = courierId,
-                Note = "The courier successfully recorded the package pickup."
+                Note = "A futár sikeresen rögzítette az előjegyzett csomag felvételét."
             };
 
             _dbContext.PackageStatusHistories.Add(history);
@@ -179,7 +179,96 @@ namespace PackageFlow.API.Services.Courier
                 Status = Shared.Enums.PackageStatus.OutForDelivery,
                 Timestamp = now,
                 ChangedByUserId = courierId,
-                Note = "The courier successfully recorded the package as out for delivery."
+                Note = "A futár sikeresen rögzítette a csomag kézbesítésre való felvételét."
+            };
+
+            _dbContext.PackageStatusHistories.Add(history);
+
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> RecordDeliveryAsync(string trackingNumber, int courierId)
+        {
+            if (string.IsNullOrWhiteSpace(trackingNumber))
+                throw new ArgumentException("Tracking number cannot be empty.",
+                    nameof(trackingNumber));
+
+            if (courierId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(courierId));
+
+            var package = await _dbContext.Packages
+                .FirstOrDefaultAsync(p =>
+                    p.TrackingNumber == trackingNumber &&
+                    p.DeliveryCourierId == courierId);
+
+            // If package does not exist, or is not assigned to this courier.
+            if (package == null)
+                return false;
+
+            // Only 'OutForDelivery' status is allowed.
+            if (package.Status != Shared.Enums.PackageStatus.OutForDelivery)
+                return false;
+
+            var now = DateTime.UtcNow;
+
+            package.Status = Shared.Enums.PackageStatus.Delivered;
+            package.DeliveredAt = now;
+
+            var history = new PackageStatusHistory
+            {
+                PackageId = package.Id,
+                Status = Shared.Enums.PackageStatus.Delivered,
+                Timestamp = now,
+                ChangedByUserId = courierId,
+                Note = "A futár sikeresen kézbesítette a csomagot."
+            };
+
+            _dbContext.PackageStatusHistories.Add(history);
+
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> RecordFailedDeliveryAsync(string trackingNumber, int courierId, string? note = null)
+        {
+            if (string.IsNullOrWhiteSpace(trackingNumber))
+                throw new ArgumentException("Tracking number cannot be empty.",
+                    nameof(trackingNumber));
+
+            if (courierId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(courierId));
+
+            var package = await _dbContext.Packages
+                .FirstOrDefaultAsync(p =>
+                    p.TrackingNumber == trackingNumber &&
+                    p.DeliveryCourierId == courierId);
+
+            // If package does not exist, or is not assigned to this courier.
+            if (package == null)
+                return false;
+
+            // Only 'OutForDelivery' status is allowed.
+            if (package.Status != Shared.Enums.PackageStatus.OutForDelivery)
+                return false;
+
+            var now = DateTime.UtcNow;
+
+            package.Status = Shared.Enums.PackageStatus.Failed;
+
+            var historyNote = string.IsNullOrWhiteSpace(note)
+                ? "A futár rögzített egy meghiúsult kézbesítési kísérletet."
+                : note.Trim();
+
+            var history = new PackageStatusHistory
+            {
+                PackageId = package.Id,
+                Status = Shared.Enums.PackageStatus.Failed,
+                Timestamp = now,
+                ChangedByUserId = courierId,
+                Note = historyNote
             };
 
             _dbContext.PackageStatusHistories.Add(history);

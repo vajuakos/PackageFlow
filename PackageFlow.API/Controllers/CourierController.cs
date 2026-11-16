@@ -66,6 +66,36 @@ namespace PackageFlow.API.Controllers
             return Ok("Package marked as out for delivery successfully.");
         }
 
+        [HttpPost("packages/{trackingNumber}/deliver")]
+        public async Task<ActionResult> RecordDelivery(string trackingNumber)
+        {
+            if (CurrentUserId == null)
+                return Unauthorized("Unauthorized access!");
+
+            var success = await _courierService
+                .RecordDeliveryAsync(trackingNumber, CurrentUserId.Value);
+
+            if (!success)
+                return BadRequest("The package could not be marked as delivered.");
+
+            return Ok("Package marked as delivered successfully.");
+        }
+
+        [HttpPost("packages/{trackingNumber}/fail")]
+        public async Task<ActionResult> RecordFailedDelivery(string trackingNumber, [FromBody] string? note=null)
+        {
+            if (CurrentUserId == null)
+                return Unauthorized("Unauthorized access!");
+
+            var success = await _courierService
+                .RecordFailedDeliveryAsync(trackingNumber, CurrentUserId.Value, note);
+
+            if (!success)
+                return BadRequest("The package could not be marked as failed.");
+
+            return Ok("Package marked as failed delivery successfully.");
+        }
+
         [HttpGet("shipping-history")]
         public async Task<ActionResult<List<CourierShippingHistoryResult>>> GetShippingHistory(
             [FromQuery]DateTime startDate, [FromQuery]DateTime endDate)
