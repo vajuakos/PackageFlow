@@ -9,7 +9,7 @@
                    OnClick="@(() => NavigationManager.NavigateTo("/warehouse"))" />
     <div>
         <MudText Typo="Typo.h5" Style="font-weight: 700;">Futárok kiosztása</MudText>
-        <MudText Typo="Typo.body2" Color="Color.Secondary">Előjegyzett és raktárban lévő csomagok kiosztása futároknak.</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Felvételi és kiszállítási feladatok kiosztása vagy átrendelése futárokhoz.</MudText>
     </div>
     <MudSpacer />
     <MudButton Variant="Variant.Outlined"
@@ -47,7 +47,7 @@ else
                         <MudText Typo="Typo.body2" Style="font-weight: 700;">@context.TrackingNumber</MudText>
                     </MudTd>
                     <MudTd DataLabel="Státusz">
-                        <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.Status == PackageStatus.PickupAssigned ? Color.Info : Color.Default)" Variant="Variant.Outlined">
                             @context.Status.ToDisplayName()
                         </MudChip>
                     </MudTd>
@@ -74,7 +74,7 @@ else
                                    Color="Color.Info"
                                    Size="Size.Small"
                                    StartIcon="@Icons.Material.Filled.Save"
-                                   Disabled="@(processingTrackingNumber == context.TrackingNumber || !GetSelectedPickupCourier(context.TrackingNumber).HasValue)"
+                                   Disabled="@(processingTrackingNumber == context.TrackingNumber || !GetSelectedPickupCourier(context.TrackingNumber).HasValue || GetSelectedPickupCourier(context.TrackingNumber) == context.PickupCourierId)"
                                    OnClick="@(() => AssignPickupCourier(context.TrackingNumber))">
                             Mentés
                         </MudButton>
@@ -108,7 +108,7 @@ else
                         <MudText Typo="Typo.body2" Style="font-weight: 700;">@context.TrackingNumber</MudText>
                     </MudTd>
                     <MudTd DataLabel="Státusz">
-                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.Status == PackageStatus.DeliveryAssigned ? Color.Info : Color.Primary)" Variant="Variant.Outlined">
                             @context.Status.ToDisplayName()
                         </MudChip>
                     </MudTd>
@@ -137,7 +137,7 @@ else
                                    Color="Color.Warning"
                                    Size="Size.Small"
                                    StartIcon="@Icons.Material.Filled.Save"
-                                   Disabled="@(processingTrackingNumber == context.TrackingNumber || !GetSelectedDeliveryCourier(context.TrackingNumber).HasValue)"
+                                   Disabled="@(processingTrackingNumber == context.TrackingNumber || !GetSelectedDeliveryCourier(context.TrackingNumber).HasValue || GetSelectedDeliveryCourier(context.TrackingNumber) == context.DeliveryCourierId)"
                                    OnClick="@(() => AssignDeliveryCourier(context.TrackingNumber))">
                             Mentés
                         </MudButton>
@@ -178,12 +178,8 @@ else
     {
         isLoading = true;
 
-        var allPickup = await WarehouseManagerService.GetPackagesForPickupAssignmentAsync();
-        var allDelivery = await WarehouseManagerService.GetPackagesForDeliveryAssignmentAsync();
-
-        // Szigorúan csak a még kiosztásra váró (Registered és InWarehouse) csomagok megjelenítése
-        pickupPackages = allPickup.Where(p => p.Status == PackageStatus.Registered).ToList();
-        deliveryPackages = allDelivery.Where(p => p.Status == PackageStatus.InWarehouse).ToList();
+        pickupPackages = await WarehouseManagerService.GetPackagesForPickupAssignmentAsync();
+        deliveryPackages = await WarehouseManagerService.GetPackagesForDeliveryAssignmentAsync();
 
         couriers = await WarehouseManagerService.GetCouriersAsync();
 
