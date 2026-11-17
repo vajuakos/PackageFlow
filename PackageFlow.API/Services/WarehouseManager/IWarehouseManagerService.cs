@@ -7,6 +7,8 @@ namespace PackageFlow.API.Services.WarehouseManager
     {
         Task<bool> RecordWarehouseArrivalAsync(string trackingNumber, int warehouseManagerId);
 
+        Task<bool> RecordWarehouseReturnAsync(string trackingNumber, int warehouseManagerId);
+
         Task<List<PickupAssignmentPackageResult>> GetPackagesForPickupAssignmentAsync();
 
         Task<List<CourierOptionResult>> GetCouriersAsync();

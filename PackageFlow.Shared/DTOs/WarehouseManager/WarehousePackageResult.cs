@@ -18,5 +18,7 @@ namespace PackageFlow.Shared.DTOs.WarehouseManager
         public int? DeliveryCourierId { get; set; }
         public string? DeliveryCourierName { get; set; }
         public DateTime? ReceivedInWarehouseAt { get; set; }
+        public int FailedDeliveryAttempts { get; set; }
+        public string? LastNote { get; set; }
     }
 }
