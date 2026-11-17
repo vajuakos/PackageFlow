@@ -61,6 +61,7 @@ else
             <MudTh>Címzett</MudTh>
             <MudTh>Méret / súly</MudTh>
             <MudTh>Felvételi futár</MudTh>
+            <MudTh>Kiszállító futár</MudTh>
             <MudTh>Raktárba érkezett</MudTh>
         </HeaderContent>
         <RowTemplate>
@@ -68,7 +69,7 @@ else
                 <MudText Typo="Typo.body2" Style="font-weight: 700;">@context.TrackingNumber</MudText>
             </MudTd>
             <MudTd DataLabel="Státusz">
-                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                <MudChip T="string" Size="Size.Small" Color="@(context.Status == PackageStatus.DeliveryAssigned ? Color.Info : Color.Primary)" Variant="Variant.Outlined">
                     @context.Status.ToDisplayName()
                 </MudChip>
             </MudTd>
@@ -81,6 +82,7 @@ else
             </MudTd>
             <MudTd DataLabel="Méret / súly">@context.Size.ToDisplayName() • @context.WeightKg kg</MudTd>
             <MudTd DataLabel="Felvételi futár">@(context.PickupCourierName ?? "–")</MudTd>
+            <MudTd DataLabel="Kiszállító futár">@(context.DeliveryCourierName ?? "–")</MudTd>
             <MudTd DataLabel="Raktárba érkezett">
                 @(context.ReceivedInWarehouseAt.HasValue
                     ? context.ReceivedInWarehouseAt.Value.ToLocalTime().ToString("yyyy.MM.dd. HH:mm")
@@ -116,7 +118,7 @@ else
 
         var allPackages = await WarehouseManagerService.GetWarehousePackagesAsync();
         packages = allPackages
-            .Where(p => p.Status == PackageStatus.InWarehouse)
+            .Where(p => p.Status is PackageStatus.InWarehouse or PackageStatus.DeliveryAssigned)
             .ToList();
 
         isLoading = false;
@@ -133,7 +135,8 @@ else
             || Contains(package.SenderName, search)
             || Contains(package.RecipientName, search)
             || Contains(package.DeliveryAddress.City, search)
-            || Contains(package.PickupCourierName, search);
+            || Contains(package.PickupCourierName, search)
+            || Contains(package.DeliveryCourierName, search);
     }
 
     private static bool Contains(string? value, string search)
