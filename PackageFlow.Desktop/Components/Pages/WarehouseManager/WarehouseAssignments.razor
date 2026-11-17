@@ -1,0 +1,245 @@
+﻿@page "/warehouse/assignments"
+
+<PageTitle>Futárok kiosztása</PageTitle>
+
+<MudPaper Elevation="2" Class="pa-4 mb-4 rounded-lg d-flex align-center">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   Class="mr-4"
+                   OnClick="@(() => NavigationManager.NavigateTo("/warehouse"))" />
+    <div>
+        <MudText Typo="Typo.h5" Style="font-weight: 700;">Futárok kiosztása</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Előjegyzett és raktárban lévő csomagok kiosztása futároknak.</MudText>
+    </div>
+    <MudSpacer />
+    <MudButton Variant="Variant.Outlined"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Refresh"
+               OnClick="LoadData"
+               Disabled="isLoading">
+        Frissítés
+    </MudButton>
+</MudPaper>
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="mx-auto d-block my-8" />
+}
+else
+{
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4">
+        <MudTabPanel Text="@($"Felvétel kiosztása ({pickupPackages.Count})")" Icon="@Icons.Material.Filled.Inventory">
+            <MudTable Items="@pickupPackages"
+                      Hover="true"
+                      Dense="true"
+                      Elevation="0"
+                      RowsPerPage="15">
+                <HeaderContent>
+                    <MudTh>Azonosító</MudTh>
+                    <MudTh>Státusz</MudTh>
+                    <MudTh>Feladó</MudTh>
+                    <MudTh>Tervezett felvétel</MudTh>
+                    <MudTh>Felvételi futár</MudTh>
+                    <MudTh Style="text-align: right;">Művelet</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Azonosító">
+                        <MudText Typo="Typo.body2" Style="font-weight: 700;">@context.TrackingNumber</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Státusz">
+                        <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">
+                            @context.Status.ToDisplayName()
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Feladó">@context.SenderName</MudTd>
+                    <MudTd DataLabel="Tervezett felvétel">@context.ScheduledPickupDate.ToString("yyyy.MM.dd.")</MudTd>
+                    <MudTd DataLabel="Felvételi futár" Style="min-width: 240px;">
+                        <MudSelect T="int?"
+                                   Value="@GetSelectedPickupCourier(context.TrackingNumber)"
+                                   ValueChanged="@((int? val) => selectedPickupCouriers[context.TrackingNumber] = val)"
+                                   Placeholder="Válassz futárt..."
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Dense="true">
+                            @foreach (var courier in couriers)
+                            {
+                                <MudSelectItem T="int?" Value="@((int?)courier.UserId)">
+                                    @courier.FullName (@courier.VehiclePlateNumber)
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudTd>
+                    <MudTd Style="text-align: right;">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Info"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Save"
+                                   Disabled="@(processingTrackingNumber == context.TrackingNumber || !GetSelectedPickupCourier(context.TrackingNumber).HasValue)"
+                                   OnClick="@(() => AssignPickupCourier(context.TrackingNumber))">
+                            Mentés
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.body1" Color="Color.Secondary" Class="pa-4">Nincs felvételi kiosztásra váró csomag.</MudText>
+                </NoRecordsContent>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudTabPanel>
+
+        <MudTabPanel Text="@($"Kiszállítás kiosztása ({deliveryPackages.Count})")" Icon="@Icons.Material.Filled.LocalShipping">
+            <MudTable Items="@deliveryPackages"
+                      Hover="true"
+                      Dense="true"
+                      Elevation="0"
+                      RowsPerPage="15">
+                <HeaderContent>
+                    <MudTh>Azonosító</MudTh>
+                    <MudTh>Státusz</MudTh>
+                    <MudTh>Címzett</MudTh>
+                    <MudTh>Kiszállítási cím</MudTh>
+                    <MudTh>Kiszállító futár</MudTh>
+                    <MudTh Style="text-align: right;">Művelet</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Azonosító">
+                        <MudText Typo="Typo.body2" Style="font-weight: 700;">@context.TrackingNumber</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Státusz">
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                            @context.Status.ToDisplayName()
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Címzett">@context.RecipientName</MudTd>
+                    <MudTd DataLabel="Kiszállítási cím">
+                        @context.DeliveryAddress.PostalCode @context.DeliveryAddress.City, @context.DeliveryAddress.Street @context.DeliveryAddress.StreetNumber
+                    </MudTd>
+                    <MudTd DataLabel="Kiszállító futár" Style="min-width: 240px;">
+                        <MudSelect T="int?"
+                                   Value="@GetSelectedDeliveryCourier(context.TrackingNumber)"
+                                   ValueChanged="@((int? val) => selectedDeliveryCouriers[context.TrackingNumber] = val)"
+                                   Placeholder="Válassz futárt..."
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Dense="true">
+                            @foreach (var courier in couriers)
+                            {
+                                <MudSelectItem T="int?" Value="@((int?)courier.UserId)">
+                                    @courier.FullName (@courier.VehiclePlateNumber)
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudTd>
+                    <MudTd Style="text-align: right;">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Warning"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Save"
+                                   Disabled="@(processingTrackingNumber == context.TrackingNumber || !GetSelectedDeliveryCourier(context.TrackingNumber).HasValue)"
+                                   OnClick="@(() => AssignDeliveryCourier(context.TrackingNumber))">
+                            Mentés
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.body1" Color="Color.Secondary" Class="pa-4">Nincs kiszállításra váró raktári csomag.</MudText>
+                </NoRecordsContent>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudTabPanel>
+    </MudTabs>
+}
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] IWarehouseManagerService WarehouseManagerService { get; set; } = default!;
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
+
+    private List<PickupAssignmentPackageResult> pickupPackages = new();
+    private List<DeliveryAssignmentPackageResult> deliveryPackages = new();
+    private List<CourierOptionResult> couriers = new();
+
+    private Dictionary<string, int?> selectedPickupCouriers = new();
+    private Dictionary<string, int?> selectedDeliveryCouriers = new();
+
+    private bool isLoading = true;
+    private string? processingTrackingNumber;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+
+        var allPickup = await WarehouseManagerService.GetPackagesForPickupAssignmentAsync();
+        var allDelivery = await WarehouseManagerService.GetPackagesForDeliveryAssignmentAsync();
+
+        // Szigorúan csak a még kiosztásra váró (Registered és InWarehouse) csomagok megjelenítése
+        pickupPackages = allPickup.Where(p => p.Status == PackageStatus.Registered).ToList();
+        deliveryPackages = allDelivery.Where(p => p.Status == PackageStatus.InWarehouse).ToList();
+
+        couriers = await WarehouseManagerService.GetCouriersAsync();
+
+        selectedPickupCouriers = pickupPackages.ToDictionary(p => p.TrackingNumber, p => p.PickupCourierId);
+        selectedDeliveryCouriers = deliveryPackages.ToDictionary(p => p.TrackingNumber, p => p.DeliveryCourierId);
+
+        isLoading = false;
+    }
+
+    private int? GetSelectedPickupCourier(string trackingNumber)
+        => selectedPickupCouriers.TryGetValue(trackingNumber, out var id) ? id : null;
+
+    private int? GetSelectedDeliveryCourier(string trackingNumber)
+        => selectedDeliveryCouriers.TryGetValue(trackingNumber, out var id) ? id : null;
+
+    private async Task AssignPickupCourier(string trackingNumber)
+    {
+        var courierId = GetSelectedPickupCourier(trackingNumber);
+        if (!courierId.HasValue)
+            return;
+
+        processingTrackingNumber = trackingNumber;
+        var success = await WarehouseManagerService.AssignPickupCourierAsync(trackingNumber, courierId.Value);
+
+        if (success)
+        {
+            Snackbar.Add($"Felvételi futár sikeresen rögzítve a(z) {trackingNumber} csomaghoz.", Severity.Success);
+            await LoadData();
+        }
+        else
+        {
+            Snackbar.Add("Nem sikerült hozzárendelni a felvételi futárt!", Severity.Error);
+        }
+
+        processingTrackingNumber = null;
+    }
+
+    private async Task AssignDeliveryCourier(string trackingNumber)
+    {
+        var courierId = GetSelectedDeliveryCourier(trackingNumber);
+        if (!courierId.HasValue)
+            return;
+
+        processingTrackingNumber = trackingNumber;
+        var success = await WarehouseManagerService.AssignDeliveryCourierAsync(trackingNumber, courierId.Value);
+
+        if (success)
+        {
+            Snackbar.Add($"Kiszállító futár sikeresen rögzítve a(z) {trackingNumber} csomaghoz.", Severity.Success);
+            await LoadData();
+        }
+        else
+        {
+            Snackbar.Add("Nem sikerült hozzárendelni a kiszállító futárt!", Severity.Error);
+        }
+
+        processingTrackingNumber = null;
+    }
+}
