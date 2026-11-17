@@ -10,6 +10,7 @@ namespace PackageFlow.API.Services.WarehouseManager
 {
     public class WarehouseManagerService : IWarehouseManagerService
     {
+        private const int MaxDeliveryAttempts = 3;
         private readonly AppDbContext _dbContext;
 
         public WarehouseManagerService(AppDbContext dbContext)
@@ -59,6 +60,72 @@ namespace PackageFlow.API.Services.WarehouseManager
             };
 
             _dbContext.PackageStatusHistories.Add(history);
+
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> RecordWarehouseReturnAsync(string trackingNumber, int warehouseManagerId)
+        {
+            if (string.IsNullOrWhiteSpace(trackingNumber))
+                throw new ArgumentException("Tracking number cannot be empty.",
+                    nameof(trackingNumber));
+
+            if (warehouseManagerId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(warehouseManagerId));
+
+            var warehouse = await _dbContext.Warehouses.FirstOrDefaultAsync();
+            if (warehouse == null)
+                throw new InvalidOperationException("Central warehouse does not exist in the database.");
+
+            var package = await _dbContext.Packages
+                .Include(p => p.StatusHistory)
+                .FirstOrDefaultAsync(p => p.TrackingNumber == trackingNumber);
+
+            // If package does not exist.
+            if (package == null)
+                return false;
+
+            // Only failed packages can return at the warehouse.
+            if (package.Status != Shared.Enums.PackageStatus.Failed)
+                return false;
+
+            int failedAttempts = package.StatusHistory
+                .Count(h => h.Status == PackageStatus.Failed);
+
+            var now = DateTime.UtcNow;
+
+            package.DeliveryCourierId = null;
+
+            if (failedAttempts >= MaxDeliveryAttempts)
+            {
+                package.Status = PackageStatus.Cancelled;
+
+                _dbContext.PackageStatusHistories.Add(new PackageStatusHistory
+                {
+                    PackageId = package.Id,
+                    Status = PackageStatus.Cancelled,
+                    Timestamp = now,
+                    ChangedByUserId = warehouseManagerId,
+                    Note = $"A csomagot {failedAttempts} sikertelen kézbesítési kísérlet után töröltük, visszaküldésre kerül a feladónak."
+                });
+            }
+            else
+            {
+                package.Status = PackageStatus.InWarehouse;
+                package.WarehouseId = warehouse.Id;
+                package.ReceivedInWarehouseAt = now;
+
+                _dbContext.PackageStatusHistories.Add(new PackageStatusHistory
+                {
+                    PackageId = package.Id,
+                    Status = PackageStatus.InWarehouse,
+                    Timestamp = now,
+                    ChangedByUserId = warehouseManagerId,
+                    Note = $"A csomag visszakerült a raktárba {failedAttempts}/{MaxDeliveryAttempts} sikertelen kézbesítés után."
+                });
+            }
 
             await _dbContext.SaveChangesAsync();
 
@@ -239,7 +306,8 @@ namespace PackageFlow.API.Services.WarehouseManager
                     p.Status == PackageStatus.PickedUp ||
                     p.Status == PackageStatus.InWarehouse ||
                     p.Status == PackageStatus.DeliveryAssigned ||
-                    p.Status == PackageStatus.OutForDelivery)
+                    p.Status == PackageStatus.OutForDelivery ||
+                    p.Status == PackageStatus.Failed)
                 .OrderByDescending(p => p.CreatedAt)
                 .Select(p => new WarehousePackageResult
                 {
@@ -264,7 +332,12 @@ namespace PackageFlow.API.Services.WarehouseManager
                     PickupCourierName = p.PickupCourier != null ? p.PickupCourier.FullName : null,
                     DeliveryCourierId = p.DeliveryCourierId,
                     DeliveryCourierName = p.DeliveryCourier != null ? p.DeliveryCourier.FullName : null,
-                    ReceivedInWarehouseAt = p.ReceivedInWarehouseAt
+                    ReceivedInWarehouseAt = p.ReceivedInWarehouseAt,
+                    FailedDeliveryAttempts = p.StatusHistory.Count(h => h.Status == PackageStatus.Failed),
+                    LastNote = p.StatusHistory
+                        .OrderByDescending(h => h.Timestamp)
+                        .Select(h => h.Note)
+                        .FirstOrDefault()
                 }).ToListAsync();
         }
     }

@@ -36,6 +36,21 @@ namespace PackageFlow.API.Controllers
             return Ok("Package warehouse arrival recorded successfully.");
         }
 
+        [HttpPost("packages/{trackingNumber}/warehouse-return")]
+        public async Task<ActionResult> RecordWarehouseReturn(string trackingNumber)
+        {
+            if (CurrentUserId == null)
+                return Unauthorized("Unauthorized access!");
+
+            var success = await _warehouseManagerService
+                .RecordWarehouseReturnAsync(trackingNumber, CurrentUserId.Value);
+
+            if (!success)
+                return BadRequest("The warehouse return could not be recorded.");
+
+            return Ok("Package warehouse return recorded successfully.");
+        }
+
         [HttpGet("pickup-assignment/packages")]
         public async Task<ActionResult<List<PickupAssignmentPackageResult>>> GetPackagesForPickupAssignment()
         {
