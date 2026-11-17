@@ -1,0 +1,238 @@
+﻿@page "/warehouse/inbound"
+
+<PageTitle>Beérkeztetés és visszavételezés</PageTitle>
+
+<MudPaper Elevation="2" Class="pa-4 mb-4 rounded-lg d-flex align-center">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   Class="mr-4"
+                   OnClick="@(() => NavigationManager.NavigateTo("/warehouse"))" />
+    <div>
+        <MudText Typo="Typo.h5" Style="font-weight: 700;">Beérkeztetés és visszavételezés</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Felvett csomagok raktárba vételezése és sikertelen kézbesítések visszavétele.</MudText>
+    </div>
+    <MudSpacer />
+    <MudButton Variant="Variant.Outlined"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Refresh"
+               OnClick="LoadPackages"
+               Disabled="isLoading">
+        Frissítés
+    </MudButton>
+</MudPaper>
+
+<MudPaper Elevation="1" Class="pa-3 mb-4 rounded-lg">
+    <MudTextField @bind-Value="searchText"
+                  Placeholder="Gyors keresés csomagazonosító (PKF-...), feladó, címzett vagy futár alapján"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense"
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.QrCodeScanner"
+                  Immediate="true"
+                  Clearable="true" />
+</MudPaper>
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="mx-auto d-block my-8" />
+}
+else
+{
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4">
+        <MudTabPanel Text="@($"Új beérkezések ({PickedUpPackages.Count()})")" Icon="@Icons.Material.Filled.MoveToInbox">
+            <MudTable Items="@PickedUpPackages"
+                      Filter="new Func<WarehousePackageResult, bool>(FilterPackage)"
+                      Hover="true"
+                      Dense="true"
+                      Elevation="0">
+                <HeaderContent>
+                    <MudTh>Azonosító</MudTh>
+                    <MudTh>Feladó</MudTh>
+                    <MudTh>Címzett</MudTh>
+                    <MudTh>Méret / Súly</MudTh>
+                    <MudTh>Felvételi futár</MudTh>
+                    <MudTh Style="text-align: right;">Művelet</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Azonosító">
+                        <MudText Typo="Typo.body2" Style="font-weight: 700;">@context.TrackingNumber</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Feladó">@context.SenderName</MudTd>
+                    <MudTd DataLabel="Címzett">
+                        <div>@context.RecipientName</div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            @context.DeliveryAddress.PostalCode @context.DeliveryAddress.City
+                        </MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Méret / Súly">@context.Size.ToDisplayName() • @context.WeightKg kg</MudTd>
+                    <MudTd DataLabel="Felvételi futár">@(context.PickupCourierName ?? "–")</MudTd>
+                    <MudTd Style="text-align: right;">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.CheckCircle"
+                                   Disabled="@(processingTrackingNumber == context.TrackingNumber)"
+                                   OnClick="@(() => RecordArrival(context.TrackingNumber))">
+                            Bevételezés raktárba
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.body1" Color="Color.Secondary" Class="pa-4">Nincs beérkezésre váró csomag.</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudTabPanel>
+
+        <MudTabPanel Text="@($"Sikertelen kézbesítések ({FailedPackages.Count()})")" Icon="@Icons.Material.Filled.AssignmentReturn">
+            <MudTable Items="@FailedPackages"
+                      Filter="new Func<WarehousePackageResult, bool>(FilterPackage)"
+                      Hover="true"
+                      Dense="true"
+                      Elevation="0">
+                <HeaderContent>
+                    <MudTh>Azonosító</MudTh>
+                    <MudTh>Kísérletek</MudTh>
+                    <MudTh>Címzett</MudTh>
+                    <MudTh>Kiszállító futár</MudTh>
+                    <MudTh>Utolsó megjegyzés</MudTh>
+                    <MudTh Style="text-align: right;">Művelet</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Azonosító">
+                        <MudText Typo="Typo.body2" Style="font-weight: 700;">@context.TrackingNumber</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Kísérletek">
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Color="@(context.FailedDeliveryAttempts >= 3 ? Color.Error : Color.Warning)"
+                                 Variant="Variant.Filled">
+                            @context.FailedDeliveryAttempts / 3 sikertelen
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Címzett">
+                        <div>@context.RecipientName</div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            @context.DeliveryAddress.PostalCode @context.DeliveryAddress.City, @context.DeliveryAddress.Street @context.DeliveryAddress.StreetNumber
+                        </MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Kiszállító futár">@(context.DeliveryCourierName ?? "–")</MudTd>
+                    <MudTd DataLabel="Utolsó megjegyzés">
+                        <MudText Typo="Typo.caption">@(string.IsNullOrWhiteSpace(context.LastNote) ? "–" : context.LastNote)</MudText>
+                    </MudTd>
+                    <MudTd Style="text-align: right; white-space: nowrap;">
+                        @if (context.FailedDeliveryAttempts >= 3)
+                        {
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Error"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.Cancel"
+                                       Disabled="@(processingTrackingNumber == context.TrackingNumber)"
+                                       OnClick="@(() => RecordReturn(context))">
+                                Lezárás (Vissza feladónak)
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Warning"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.Replay"
+                                       Disabled="@(processingTrackingNumber == context.TrackingNumber)"
+                                       OnClick="@(() => RecordReturn(context))">
+                                Visszavételezés raktárba
+                            </MudButton>
+                        }
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.body1" Color="Color.Secondary" Class="pa-4">Nincs visszavételezésre váró sikertelen csomag.</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudTabPanel>
+    </MudTabs>
+}
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] IWarehouseManagerService WarehouseManagerService { get; set; } = default!;
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
+
+    private List<WarehousePackageResult> allPackages = new();
+    private bool isLoading = true;
+    private string? processingTrackingNumber;
+    private string searchText = string.Empty;
+
+    private IEnumerable<WarehousePackageResult> PickedUpPackages =>
+        allPackages.Where(p => p.Status == PackageStatus.PickedUp);
+
+    private IEnumerable<WarehousePackageResult> FailedPackages =>
+        allPackages.Where(p => p.Status == PackageStatus.Failed);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPackages();
+    }
+
+    private async Task LoadPackages()
+    {
+        isLoading = true;
+        allPackages = await WarehouseManagerService.GetWarehousePackagesAsync();
+        isLoading = false;
+    }
+
+    private async Task RecordArrival(string trackingNumber)
+    {
+        processingTrackingNumber = trackingNumber;
+        var success = await WarehouseManagerService.RecordWarehouseArrivalAsync(trackingNumber);
+
+        if (success)
+        {
+            Snackbar.Add($"A(z) {trackingNumber} csomag bevételezve a raktárba.", Severity.Success);
+            await LoadPackages();
+        }
+        else
+        {
+            Snackbar.Add("Nem sikerült rögzíteni a raktári beérkezést!", Severity.Error);
+        }
+
+        processingTrackingNumber = null;
+    }
+
+    private async Task RecordReturn(WarehousePackageResult package)
+    {
+        processingTrackingNumber = package.TrackingNumber;
+        var success = await WarehouseManagerService.RecordWarehouseReturnAsync(package.TrackingNumber);
+
+        if (success)
+        {
+            if (package.FailedDeliveryAttempts >= 3)
+            {
+                Snackbar.Add($"A(z) {package.TrackingNumber} csomag 3 sikertelen kísérlet után lezárva (visszaküldés feladónak).", Severity.Warning);
+            }
+            else
+            {
+                Snackbar.Add($"A(z) {package.TrackingNumber} csomag visszavételezve a raktárba (újra kiosztható).", Severity.Success);
+            }
+            await LoadPackages();
+        }
+        else
+        {
+            Snackbar.Add("Nem sikerült rögzíteni a visszavételezést!", Severity.Error);
+        }
+
+        processingTrackingNumber = null;
+    }
+
+    private bool FilterPackage(WarehousePackageResult package)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+            return true;
+
+        var search = searchText.Trim();
+        return (package.TrackingNumber?.Contains(search, StringComparison.OrdinalIgnoreCase) == true)
+            || (package.SenderName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true)
+            || (package.RecipientName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true)
+            || (package.PickupCourierName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true)
+            || (package.DeliveryCourierName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true);
+    }
+}
