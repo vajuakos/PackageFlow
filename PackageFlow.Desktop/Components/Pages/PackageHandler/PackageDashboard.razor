@@ -1,5 +1,5 @@
 ﻿@page "/packages/dashboard"
-@attribute [Authorize(Roles = UserRoles.Customer)]
+@attribute [AllowAnonymous]
 
 <MudGrid Spacing="4" Class="mb-6">
     <MudItem xs="12" md="3">
@@ -146,6 +146,7 @@
 
 @code {
     [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
     [Inject] IPackageHandlerService PackageHandler { get; set; } = default!;
     [Inject] ISnackbar Snackbar { get; set; } = default!;
 
@@ -155,7 +156,13 @@
 
     protected override async Task OnInitializedAsync()
     {
-        packages = await PackageHandler.GetPackagesForUserAsync();
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true && user.IsInRole(UserRoles.Customer))
+        {
+            packages = await PackageHandler.GetPackagesForUserAsync();
+        }
     }
 
     private void SearchPackage()
